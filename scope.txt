@@ -1,0 +1,190 @@
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--> Paralellization of different services in the AMF module.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Some papers related to the use of parallelization of functions in serverless computing.
+1. Network Function Parallelization for High Reliability and Low Latency Services:  The paper proposes a Network Function Parallelism (NFP) architecture that splits a network function (NF) into several subfunctions that run in parallel on different edge nodes1. The subfunctions use a distributed coding scheme that allows them to recover each other in case of failure1. The paper also proposes a learning based SFC deployment strategy that optimizes the placement and routing of the subfunctions according to the network conditions and service requirements1. By doing so, the paper claims that the NFP architecture can improve the reliability and reduce the delay of service function chains (SFCs) for 5G and beyond services
+2.Serverless streaming for emerging media: towards 5G network-driven cost optimization
+
+
+Idea: deploy each of the different services that AMF is composed by in different fucntion in Openfaas and deploy the whole module as one for comparing some metrics. 
+
+The idea will be to mainly study latency and throughtput that it is whta it is expect to improve and find the benefits of paralellization. Also study the trade-offs that can exist like the one paper 1. shows:
+	1. Additional overhead
+	2. More network resources by deploying multiple subfunctions
+	3. Increase the complexity
+	
+
+Define a use case, based on:
+	1. low-latency communication: parallelizing reduces the delay (some use cases: telemedicine, edge computing (IoT devices), handover 	improvements for example for fast transportation connectitity)
+	2. high-reliability communication: parallelizing increase availability and scalability of the individual services when it is needed. 	(Can this improve security controls for each service?????????)
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--> AMF structure
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+=> Basic AMF services following the rel 15
+
+	1. Comunication
+	2. Eventexposure
+	3. MT
+	4. Location
+
+
+=> Posible functions that could be deploy in a parallel openfaas function:
+	1. NAS encode
+	2. NGAP Messages (protocol for stablish connection NG_RAN physical layer)
+
+
+=> SBI
+
+1. OAM : Register UE context and info. Adminstration and system operations
+	Depends on : SBI/producer/oam.go
+
+2. MT : Contains info of the Mobile Terminated (MT)
+	Fucntions: provide domain selection and enable UE reachability
+
+	Depends on: SBI/producer/mt.go
+
+3. Location: Provide info od the user location
+	Depends on: SBI/producer/location_info.go
+
+4. Eventexposure: send modification when a user is created, modify or deleted (subcription process).
+	Depends on: SBI/producer/event_exposure.go
+			
+6. Comunication : responsable of the communication with other 5G network elements:
+	Depends on: SBI/producer/subscription.go
+			SBI/producer/ ue_context.go
+			SBI/producer/ n1n2message.go
+			SBI/producer/ callback/n1n2message.go
+			Internal/context/amf_ue.go
+
+
+
+
+
+SCOPE OF THE PROJECT:
+
+1) Select a 5G process
+2) Deploy free5gc using kubernetes
+3) Deploy free5gc as a function in Openfaas. 
+	3.1) Study the services that are actually involved in the process selected
+	3.2) Only deploy the services selected
+	3.3) CREATE A GUIDELINE FOR DEPLOYING FREE5GC IN OPENFAAS
+4) Compare the performance of both deployments
+
+
+------------------------------------------------------------------------------------------------
+
+--> 5G process selection: Authentication process
+
+--------------------------------------------------------------------------------------------------
+
+Free5GC uses the EAP-AKA' protocol (EAP-AKA prime: Extensible Authentication Protocol – Authentication and Key Management) for authentication of mobile devices in the 5G network.
+The 5g functions involved in the proecess:
+1)AMF: Access and Mobility Management Function
+	1.1) Security Anchor Function (SEAF): “middleman” during the authentication process between a UE and its home network. Closely with AMF
+2)AUSF: Authentication Server Function
+3)UDM: Unified data management
+	3.1) Authentication Credential Repository and Processing Function (ARPF)
+
+
+Phases:
+1)Authentication Request:
+
+The UE initiates the authentication process by sending an Authentication Request to the AMF.
+The 5G UE identifiers include rhe SUCI (Subscription concealed Identifier) is used in situations where the identity of the subscriber needs to be concealed. It provides a way to identify the mobile device without revealing personal information.
+
+
+2)Authentication Vector Generation:
+
+When recieving the Authentication Request, the AMF communicates with the AUSF to generate an authentication vector.
+The authentication vector consists of an AUTH token, an XRES token, the key KAUSF, and the SUPI (Subscription Permanent Identifier) for the identification of subscribers.
+Until de UDM, it is transported the SUCI and the SNN (serving network name)
+
+3)Authentication Challenge:
+
+The AMF sends an Authentication Challenge message to the UE, containing the authentication vector generated by the AUSF.
+This authentication vector includes the XRES and the authentication method (AEP-AKA in this case) 
+The AMF is responsable of storing the XRES and calculates from it the HXRES which includes in the vector.
+The UE uses the received authentication vector, to perform cryptographic operations and generate a response, plus the SUPI and the SNN (serving network name)
+
+
+4)Authentication Response:
+
+The UE then sends the Challenge Response message to the AMF/SEAF in a NAS message, containing the response (RES) generated based on the received authentication vector.
+This response demonstrates that the UE possesses the correct authentication credentials.
+The UE send the AUTN, RAND of the vector and the RES.
+
+5) Authentication Verification:
+
+The AMF validates the Authentication Response received from the UE by calculating the HRES and compare it to HXRES ( RES VERIFIED).
+It verifies the response against the authentication vector stored in the AUSF to ensure the correctness of the authentication.
+
+6)Authentication Result:
+
+Based on the verification outcome, the AMF determines the result of the authentication process. 
+
+If the authentication is successful: the AUSF convert the KAUSF to the KSEAF and send it to the AMF with the result of no error and the SUPI.
+
+If the authentication is not successful: the AUSF send an error message to the AMF "serving network ot authorized"
+
+
+If there was no error in the previus stage:
+
+7)Subscriber Data Retrieval:
+
+The AMF request the necessary subscriber data from the UDM to complete the authentication process.
+This data can include subscription information, service profiles, and security-related parameters.
+Also the UDM is in charge of storing the subscriber data having access to the DB
+
+8)Authentication Completion:
+
+Once the authentication and subscriber data retrieval processes are successfully completed, the AMF notifies the UE of the authentication success.
+The UE is granted access to the 5G network, and the next process can be carried.
+
+
+SOURCES:
+https://www.researchgate.net/figure/5G-AKA-and-EAP-AKA-The-main-focus-is-on-the-5G-AKA-The-computation-of-RES-in-the-ME_fig3_326155249
+https://www.researchgate.net/figure/Authentication-procedure-for-5G-AKA-protocol_fig2_341225692
+https://www.techplayon.com/5g-authentication-and-key-management-aka-procedure/
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+--> State of art 
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+1. ToLambda--Automatic Path to Serverless Architectures: toLambda provides automatic conversion of Java monolith application code into AWS Lambda Node.js microservices. Our tool is a generic automation and transformation tool. It takes a zip file with your Java monolith application source code and generates Node.js AWS Lambda functions. These methods can be deployed into AWS manually or through SAM Cloud Formation templates. Decomposition and dependency search is done completely automatically. The code generated is self-sufficient and contains all the referenced methods.
+
+
+
+2.Serverless Microservices: Architectural Patterns and Design Principles: it presents TheArchitect algorithm capable of creating a high-level architeture design diagram for serverless-microservices Architectures. (https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8544423)
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+3. MicroValid: A Validation Framework for Automatically Decomposed Microservices: framework for microserc¡vice validation. NOT SERVERLESS ARCHITECTURE
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+THINGS TO CORRECT FOR NEXT MEETING:
+
+1. What type of messages send the UE to the AMF (no http)
+2. Include the UDR in the diagram. The UDM sends petitions to the UDR
+3. Start by deploying free5gc in kubernetes
+4. Read about the deployment of UERANISM for UE petitions
+5. Create the overleaf and start writting about the state of art: the state if art papers and the 5g process
