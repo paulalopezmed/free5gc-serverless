@@ -1,0 +1,96 @@
+= Deploy free5gc with minikube 
+Paula López Medina 
+v1.0, 2020-12
+// Metadata
+:keywords: free5gc, minikube
+// Create TOC wherever needed
+:toc: macro
+:sectanchors:
+:sectnumlevels: 2
+:sectnums: 
+:source-highlighter: pygments
+:imagesdir: images
+// Start: Enable admonition icons
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+// Icons for GitHub
+:yes: :heavy_check_mark:
+:no: :x:
+endif::[]
+ifndef::env-github[]
+:icons: font
+// Icons not for GitHub
+:yes: icon:check[]
+:no: icon:times[]
+endif::[]
+// End: Enable admonition icons
+
+This documentation contains the information necesary to deploy the free5gc core with minikube
+
+// Create the Table of contents here
+toc::[]
+
+
+
+== Introduction
+
+
+
+== Install it
+
+To install calico:
+
+curl -O -L https://docs.projectcalico.org/v3.19/manifests/calico.yaml
+
+kubectl apply -f calico.yaml
+
+
+In case you recieved this error message:
+
+error: unable to recognize "calico.yaml": no matches for kind "PodDisruptionBudget" in version "policy/v1beta1"
+
+In line 3867:apiVersion: policy/v1beta1
+Change for 
+
+3867:apiVersion: policy/v1
+
+And apply again with:
+
+kubectl apply -f calico.yaml
+
+Check that the calico pods are running:
+
+kubectl get pods -n kube-system
+NAME                                       READY   STATUS    RESTARTS       AGE
+calico-kube-controllers-8674f7b57b-82bd7   1/1     Running   0              10m
+calico-node-zw72t                          1/1     Running   0              10m
+
+
+
+== Use it 
+
+To acces the free5gc dashboard:
+
+Copy the public key in the remote server to have ssh access:
+
+scp C:\Users\paulo\.ssh\id_rsa.pub paula@130.149.223.203:~/.ssh/
+
+kubernets port forward to access the NodePort service in the server machine
+
+kubectl port-forward --namespace free5gc svc/webui-service 5000:5000
+
+SSH port fordwarding to access the dashboard from the local machine:
+
+ssh -L localhost:5000:localhost:5000 paula@130.149.223.203
+
+Finally access the dashboard in:
+
+http://localhost:5000/#/
+
+Acces with 
+Username:admin
+Password:free5gc
