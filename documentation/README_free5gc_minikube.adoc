@@ -1,0 +1,24 @@
+
+== Use it 
+
+To acces the free5gc dashboard:
+
+Copy the public key in the remote server to have ssh access:
+
+scp C:\Users\paulo\.ssh\id_rsa.pub paula@130.149.223.203:~/.ssh/
+
+kubernets port forward to access the NodePort service in the server machine
+
+kubectl port-forward --namespace free5gc svc/webui-service 5000:5000
+
+SSH port fordwarding to access the dashboard from the local machine:
+
+ssh -L localhost:5000:localhost:5000 paula@130.149.223.203
+
+Finally access the dashboard in:
+
+http://localhost:5000/#/
+
+Acces with 
+Username:admin
+Password:free5gc
