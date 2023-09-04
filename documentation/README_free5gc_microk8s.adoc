@@ -287,3 +287,30 @@ So the command needing for installing free5gc helm chart:
 ----
 microk8s helm -n free5gc install free5gc-core towards5gs/free5gc     --set global.n2network.masterIf=enp0s3     --set global.n3network.masterIf=enp0s3     --set global.n4network.masterIf=enp0s3     --set global.n6network.masterIf=enp0s3     --set global.n9network.masterIf=enp0s3     --set global.n6network.subnetIP=192.168.3.0     --set global.n6network.cidr=24     --set global.n6network.gatewayIP=192.168.3.1     --set free5gc-upf.upf.n6if.ipAddress=192.168.3.5    --set global.n2network.type=macvlan     --set global.n3network.type=macvlan     --set global.n4network.type=macvlan     --set global.n6network.type=macvlan     --set global.n9network.type=macvlan
 ----
+
+To check everything is working correctly the ouput of this command should be of this type:
+
+[source, bash]
+----
+$ microk8s kubectl get pods -A
+NAMESPACE     NAME                                                     READY   STATUS    RESTARTS        AGE
+free5gc       free5gc-core-free5gc-amf-amf-7b856846c9-h6dfg            1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-ausf-ausf-7dd46c9fb7-ktz5q          1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-dbpython-dbpython-b6b587768-4vdjc   1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-nrf-nrf-94c56fb79-bbgmb             1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-nssf-nssf-545f9dc99c-wzmrh          1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-pcf-pcf-57589b5c66-rjpsr            1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-smf-smf-7cc7bd6b54-94r2v            1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-udm-udm-5d5497c6f4-2vns6            1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-udr-udr-ffb6dc48f-hcz29             1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-upf-upf-56469b9fd9-dfw5s            1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-webui-webui-5fbb96469-xs6zb         1/1     Running   0               5m5s
+free5gc       mongodb-0                                                1/1     Running   0               5m5s
+ingress       nginx-ingress-microk8s-controller-srsr2                  1/1     Running   1 (9m11s ago)   44m
+kube-system   coredns-7745f9f87f-s8j77                                 1/1     Running   3 (9m11s ago)   61m
+kube-system   dashboard-metrics-scraper-5cb4f4bb9c-rggmq               1/1     Running   1 (9m11s ago)   15m
+kube-system   hostpath-provisioner-58694c9f4b-7shl7                    1/1     Running   3 (9m11s ago)   46m
+kube-system   kube-multus-ds-k8fh8                                     1/1     Running   2 (9m11s ago)   46m
+kube-system   kubernetes-dashboard-fc86bcc89-9rw5z                     1/1     Running   1 (9m11s ago)   15m
+kube-system   metrics-server-7747f8d66b-xrm9k                          1/1     Running   1 (9m11s ago)   15m
+----
