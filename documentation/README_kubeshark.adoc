@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 = Install kubeshark and use it 
 Paula López Medina 
 v1.0, 2020-12
@@ -75,4 +76,82 @@ Access through curl with:
 [source, bash]
 ----
 curl http://localhost:8899/
+=======
+= Install kubeshark and use it 
+Paula López Medina 
+v1.0, 2020-12
+// Metadata
+:keywords: kubeshark 
+// Create TOC wherever needed
+:toc: macro
+:sectanchors:
+:sectnumlevels: 2
+:sectnums: 
+:source-highlighter: pygments
+:imagesdir: images
+// Start: Enable admonition icons
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+// Icons for GitHub
+:yes: :heavy_check_mark:
+:no: :x:
+endif::[]
+ifndef::env-github[]
+:icons: font
+// Icons not for GitHub
+:yes: icon:check[]
+:no: icon:times[]
+endif::[]
+// End: Enable admonition icons
+
+This documentation contains the information necesary to install and use kubeshark in minikube
+
+// Create the Table of contents here
+toc::[]
+
+
+
+== Introduction
+
+https://kubeshark.co/#steps[Kubeshark] is a tool to monitore traffic accross pods and namespaces in a cluster. 
+
+By default this installation will deploy it in the default namespace. For correcting this apply the section <<Change the namespace of installation>>
+
+== Install it
+
+=== Change the namespace of installation 
+
+
+
+
+=== Instalation with helm
+To install kubeshark with helm use: 
+
+[source, bash]
+----
+helm repo add kubeshark https://helm.kubeshark.co
+helm install kubeshark kubeshark/kubeshark
+----
+
+== Use it 
+To enable dashboard access:
+
+[source, bash]
+----
+kubectl port-forward service/kubeshark-hub 8898:80 & \
+kubectl port-forward service/kubeshark-front 8899:80 &
+----
+
+
+
+Access through curl with: 
+
+[source, bash]
+----
+curl http://localhost:8899/
+>>>>>>> 6f0808e6fafd551a83fa05de2f68db8b3f801b3b
 ----
