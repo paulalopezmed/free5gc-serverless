@@ -1,0 +1,289 @@
+= Deploy free5gc with microk8s 
+Paula López Medina 
+v1.0, 2020-12
+// Metadata
+:keywords: kubeshark 
+// Create TOC wherever needed
+:toc: macro
+:sectanchors:
+:sectnumlevels: 2
+:sectnums: 
+:source-highlighter: pygments
+:imagesdir: images
+// Start: Enable admonition icons
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+// Icons for GitHub
+:yes: :heavy_check_mark:
+:no: :x:
+endif::[]
+ifndef::env-github[]
+:icons: font
+// Icons not for GitHub
+:yes: icon:check[]
+:no: icon:times[]
+endif::[]
+// End: Enable admonition icons
+
+This documentation contains the information necesary to deploy free5gc and UERANSIM using microk8s 
+
+// Create the Table of contents here
+toc::[]
+
+
+
+== Introduction
+
+Int his documentation we will see how to deploy free5gc and UERANSIM using microk8s. The decition to use mircok8s is based on the ease of cluster cofiguration and the stability it provides by taking away much of the complexity of the deployment of the cluster.
+
+== Prerequisites and instalation proceses
+
+Preparethe packeages needed in the system
+
+[source, bash]
+----
+sudo apt update
+sudo apt upgrade
+----
+
+Check the kernel of your machine
+
+[source, bash]
+----
+uname -a
+Linux ubuntu22 5.15.0-79-generic #86-Ubuntu SMP Mon Jul 10 16:07:21 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+----
+
+=== Install prerequisites
+
+Install helm
+
+[source, bash]
+----
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+rm get_helm.sh
+----
+
+Install the neccesary packeges for gpt5g
+
+[source, bash]
+----
+sudo apt -y install git gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
+----
+
+=== Install microk8s ad configuration of the cluster
+
+Install and start the cluster automatically (verified that snap is install)
+
+[source, bash]
+----
+sudo snap install microk8s --classic
+sudo usermod -a -G microk8s $USER
+sudo chown -f -R $USER ~/.kube
+newgrp microk8s
+----
+
+For cheacking the state of the cluster
+[source, bash]
+----
+microk8s status --wait-ready
+----
+
+Configure the cluster with the diable/enable of the adons needed
+
+[source, bash]
+----
+microk8s disable ha-cluster --force
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable dns
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable community
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable hostpath-storage
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable multus
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable ingress
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable dashboard
+microk8s status
+microk8s kubectl get pods -A
+
+----
+
+Check that the cluster is correctly configured with this output:
+
+[source, bash]
+----
+
+$ microk8s status
+
+microk8s is running
+high-availability: no
+  datastore endpoints:
+    127.0.0.1:12379
+addons:
+  enabled:
+    multus               # (community) Multus CNI enables attaching multiple network interfaces to pods
+    community            # (core) The community addons repository
+    dashboard            # (core) The Kubernetes dashboard
+    dns                  # (core) CoreDNS
+    helm                 # (core) Helm - the package manager for Kubernetes
+    helm3                # (core) Helm 3 - the package manager for Kubernetes
+    hostpath-storage     # (core) Storage class; allocates storage from host directory
+    ingress              # (core) Ingress controller for external access
+    metrics-server       # (core) K8s Metrics Server for API access to service metrics
+    storage              # (core) Alias to hostpath-storage add-on, deprecated
+  disabled:
+    argocd               # (community) Argo CD is a declarative continuous deployment for Kubernetes.
+    cilium               # (community) SDN, fast with full network policy
+    dashboard-ingress    # (community) Ingress definition for Kubernetes dashboard
+    easyhaproxy          # (community) EasyHAProxy can configure HAProxy automatically based on ingress labels
+    fluentd              # (community) Elasticsearch-Fluentd-Kibana logging and monitoring
+    gopaddle-lite        # (community) Cheapest, fastest and simplest way to modernize your applications
+    inaccel              # (community) Simplifying FPGA management in Kubernetes
+    istio                # (community) Core Istio service mesh services
+    jaeger               # (community) Kubernetes Jaeger operator with its simple config
+    kata                 # (community) Kata Containers is a secure runtime with lightweight VMS
+    keda                 # (community) Kubernetes-based Event Driven Autoscaling
+    knative              # (community) Knative Serverless and Event Driven Applications
+    kwasm                # (community) WebAssembly support for WasmEdge (Docker Wasm) and Spin (Azure AKS WASI)
+    linkerd              # (community) Linkerd is a service mesh for Kubernetes and other frameworks
+    nfs                  # (community) NFS Server Provisioner
+    ondat                # (community) Ondat is a software-defined, cloud native storage platform for Kubernetes.
+    openebs              # (community) OpenEBS is the open-source storage solution for Kubernetes
+    openfaas             # (community) OpenFaaS serverless framework
+    osm-edge             # (community) osm-edge is a lightweight SMI compatible service mesh for the edge-computing.
+    parking              # (community) Static webserver to park a domain. Works with EasyHAProxy.
+    portainer            # (community) Portainer UI for your Kubernetes cluster
+    shifu                # (community) Kubernetes native IoT software development framework.
+    sosivio              # (community) Kubernetes Predictive Troubleshooting, Observability, and Resource Optimization
+    traefik              # (community) traefik Ingress controller
+    trivy                # (community) Kubernetes-native security scanner
+    cert-manager         # (core) Cloud native certificate management
+    gpu                  # (core) Automatic enablement of Nvidia CUDA
+    ha-cluster           # (core) Configure high availability on the current node
+    host-access          # (core) Allow Pods connecting to Host services smoothly
+    kube-ovn             # (core) An advanced network fabric for Kubernetes
+    mayastor             # (core) OpenEBS MayaStor
+    metallb              # (core) Loadbalancer for your Kubernetes cluster
+    minio                # (core) MinIO object storage
+    observability        # (core) A lightweight observability stack for logs, traces and metrics
+    prometheus           # (core) Prometheus operator for monitoring and logging
+    rbac                 # (core) Role-Based Access Control for authorisation
+    registry             # (core) Private image registry exposed on localhost:32000
+----
+
+[source, bash]
+----
+$ microk8s kubectl get pods -A
+
+NAMESPACE     NAME                                         READY   STATUS    RESTARTS       AGE
+ingress       nginx-ingress-microk8s-controller-srsr2      1/1     Running   0              29m
+kube-system   coredns-7745f9f87f-s8j77                     1/1     Running   2 (10m ago)    46m
+kube-system   dashboard-metrics-scraper-5cb4f4bb9c-rggmq   1/1     Running   0              38s
+kube-system   hostpath-provisioner-58694c9f4b-7shl7        1/1     Running   2 (111s ago)   31m
+kube-system   kube-multus-ds-k8fh8                         1/1     Running   1 (10m ago)    30m
+kube-system   kubernetes-dashboard-fc86bcc89-9rw5z         1/1     Running   0              38s
+kube-system   metrics-server-7747f8d66b-xrm9k              1/1     Running   0              38s
+
+----
+
+Lastly active the promisc mode in the corresponding network. For that first check the network interface on the kubernetes nodes corresponding to your system that might be similar to the form eth0. For that, use the command to cheack the name of the inetrface:
+
+[source, bash]
+----
+ip a
+----
+
+Then run the command:
+[source, bash]
+----
+sudo ip link set enp0s3 promisc on
+----
+
+=== Install gtp5g and libgtp5gnl
+
+First install gtp5g:
+
+[source, bash]
+----
+
+git clone https://github.com/free5gc/gtp5g.git
+cd gtp5g
+make clean && make
+sudo make install
+
+----
+
+Secondly install libgtp5gnl
+[source, bash]
+----
+git clone https://github.com/free5gc/libgtp5gnl.git
+cd libgtp5gnl
+autoreconf -iv
+./configure --prefix=`pwd`
+make
+sudo ./tools/gtp5g-tunnel list pdr
+sudo ./tools/gtp5g-tunnel list far
+sudo ./run.sh UPF_PDR_FAR_QER
+./run.sh ULCLTest1
+----
+
+
+
+== Deploy free5gc
+
+First create a namespace for the deployment named free5gc
+
+[source, bash]
+----
+microk8s kubectl create namespace free5gc
+----
+
+Add the https://raw.githubusercontent.com/Orange-OpenSource/towards5gs-helm/main/repo/"[towards5gs] repo with:
+
+[source, bash]
+----
+helm repo add towards5gs 'https://raw.githubusercontent.com/Orange-OpenSource/towards5gs-helm/main/repo/'
+helm repo update
+----
+
+For the install command we have to check one again the network interface, as an example in this case the command ip a give this output for the enp0s3 network interface:
+
+
+[source, bash]
+----
+$ ip a
+
+2: enp0s3: <BROADCAST,MULTICAST,PROMISC,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:5f:06:2f brd ff:ff:ff:ff:ff:ff
+    inet 192.168.3.45/24 metric 100 brd 192.168.3.255 scope global dynamic enp0s3
+       valid_lft 85267sec preferred_lft 85267sec
+    inet6 fe80::a00:27ff:fe5f:62f/64 scope link
+       valid_lft forever preferred_lft forever
+----
+
+So the command needing for installing free5gc helm chart:
+[source, bash]
+----
+microk8s helm -n free5gc install free5gc-core towards5gs/free5gc     --set global.n2network.masterIf=enp0s3     --set global.n3network.masterIf=enp0s3     --set global.n4network.masterIf=enp0s3     --set global.n6network.masterIf=enp0s3     --set global.n9network.masterIf=enp0s3     --set global.n6network.subnetIP=192.168.3.0     --set global.n6network.cidr=24     --set global.n6network.gatewayIP=192.168.3.1     --set free5gc-upf.upf.n6if.ipAddress=192.168.3.5    --set global.n2network.type=macvlan     --set global.n3network.type=macvlan     --set global.n4network.type=macvlan     --set global.n6network.type=macvlan     --set global.n9network.type=macvlan
+----
