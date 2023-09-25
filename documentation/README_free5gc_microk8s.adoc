@@ -54,8 +54,9 @@ Check the kernel of your machine
 
 [source, bash]
 ----
-uname -a
-Linux ubuntu22 5.15.0-79-generic #86-Ubuntu SMP Mon Jul 10 16:07:21 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+$ uname -a
+Linux free5gc-serverless 5.15.0-83-generic #92-Ubuntu SMP Mon Aug 14 09:30:42 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+
 ----
 
 === Install prerequisites
@@ -79,9 +80,10 @@ sudo apt -y install git gcc g++ cmake autoconf libtool pkg-config libmnl-dev lib
 
 === Install microk8s ad configuration of the cluster
 
-Install and start the cluster automatically (verified that snap is install)
+Install and start the cluster automatically (verified that snap is installed)
 
 [source, bash]
+
 ----
 sudo snap install microk8s --classic
 sudo usermod -a -G microk8s $USER
@@ -217,7 +219,7 @@ ip a
 Then run the command:
 [source, bash]
 ----
-sudo ip link set enp0s3 promisc on
+sudo ip link set ens18 promisc on
 ----
 
 === Install gtp5g and libgtp5gnl
@@ -233,6 +235,19 @@ make clean && make
 sudo make install
 
 ----
+
+For this error when making make comand:
+Skipping BTF generation for /home/paula/gtp5g/gtp5g.ko due to unavailability of vmlinux
+
+Solved with:
+
+[source, bash]
+----
+sudo apt install dwarves
+sudo cp /sys/kernel/btf/vmlinux /usr/lib/modules/`uname -r`/build/
+
+----
+
 
 Secondly install libgtp5gnl
 [source, bash]
@@ -250,7 +265,7 @@ sudo ./run.sh UPF_PDR_FAR_QER
 
 
 
-== Deploy free5gc
+== Deploy free5gc and UERANSIM
 
 First create a namespace for the deployment named free5gc
 
@@ -274,18 +289,20 @@ For the install command we have to check one again the network interface, as an 
 ----
 $ ip a
 
-2: enp0s3: <BROADCAST,MULTICAST,PROMISC,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
-    link/ether 08:00:27:5f:06:2f brd ff:ff:ff:ff:ff:ff
-    inet 192.168.3.45/24 metric 100 brd 192.168.3.255 scope global dynamic enp0s3
-       valid_lft 85267sec preferred_lft 85267sec
-    inet6 fe80::a00:27ff:fe5f:62f/64 scope link
+2: ens18: <BROADCAST,MULTICAST,PROMISC,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 76:9a:58:76:d9:d0 brd ff:ff:ff:ff:ff:ff
+    altname enp0s18
+    inet 130.149.223.203/26 brd 130.149.223.255 scope global ens18
        valid_lft forever preferred_lft forever
+    inet6 fe80::749a:58ff:fe76:d9d0/64 scope link
+       valid_lft forever preferred_lft forever
+
 ----
 
 So the command needing for installing free5gc helm chart:
 [source, bash]
 ----
-microk8s helm -n free5gc install free5gc-core towards5gs/free5gc     --set global.n2network.masterIf=enp0s3     --set global.n3network.masterIf=enp0s3     --set global.n4network.masterIf=enp0s3     --set global.n6network.masterIf=enp0s3     --set global.n9network.masterIf=enp0s3     --set global.n6network.subnetIP=192.168.3.0     --set global.n6network.cidr=24     --set global.n6network.gatewayIP=192.168.3.1     --set free5gc-upf.upf.n6if.ipAddress=192.168.3.5    --set global.n2network.type=macvlan     --set global.n3network.type=macvlan     --set global.n4network.type=macvlan     --set global.n6network.type=macvlan     --set global.n9network.type=macvlan
+microk8s helm -n free5gc install free5gc-core towards5gs/free5gc     --set global.n2network.masterIf=ens18     --set global.n3network.masterIf=ens18     --set global.n4network.masterIf=ens18     --set global.n6network.masterIf=ens18     --set global.n9network.masterIf=ens18     --set global.n6network.subnetIP=130.149.223.192     --set global.n6network.cidr=26     --set global.n6network.gatewayIP=130.149.223.194     --set free5gc-upf.upf.n6if.ipAddress=130.149.223.198    --set global.n2network.type=macvlan     --set global.n3network.type=macvlan     --set global.n4network.type=macvlan     --set global.n6network.type=macvlan     --set global.n9network.type=macvlan
 ----
 
 To check everything is working correctly the ouput of this command should be of this type:
@@ -313,4 +330,191 @@ kube-system   hostpath-provisioner-58694c9f4b-7shl7                    1/1     R
 kube-system   kube-multus-ds-k8fh8                                     1/1     Running   2 (9m11s ago)   46m
 kube-system   kubernetes-dashboard-fc86bcc89-9rw5z                     1/1     Running   1 (9m11s ago)   15m
 kube-system   metrics-server-7747f8d66b-xrm9k                          1/1     Running   1 (9m11s ago)   15m
+----
+
+When the 5G core is deployed, for testing its performance we should use UERANSIM which is a 5G UE and RAN (gNodeB) simulator. For that we will use the same free5gc repo as before (towards5gs)
+
+[source, bash]
+----
+
+microk8s helm3 -n free5gc install free5gc-ueransim towards5gs/ueransim --set global.n2network.masterIf=ens18,global.n3network.masterIf=ens18,global.n2network.type=macvlan,global.n3network.type=macvlan
+
+----
+
+The pods should be in running mode as follows:
+
+[source, bash]
+----
+
+$microk8s kubectl get pods -A
+
+free5gc       free5gc-ueransim-gnb-6946c7db87-wlpct                    1/1     Running   0          2d18h
+free5gc       free5gc-ueransim-ue-c948c5b56-twbzc                      1/1     Running   0          2d18h
+----
+
+
+Make sure that this return is 1
+[source, bash]
+----
+kubectl -n free5gc exec -it free5gc-core-free5gc-upf-upf-d7c877b7-tjj47 -- cat /proc/sys/net/ipv4/ip_forward
+
+----
+
+For checking the ip of UE and any other data we can acces the pods command line:
+[source, bash]
+----
+kubectl -n free5gc exec -it free5gc-core-free5gc-upf-upf-d7c877b7-tjj47 -- cat /proc/sys/net/ipv4/ip_forward
+----
+
+
+== How to use and test its functionality
+
+In first plkace we should acces the Web UI to be able to create a UE for testing:
+
+For this the first step is to check that the pod called webui-service, the one that will give us access to the portal is lisneting in the port 5000 with the comand:
+
+[source, bash]
+----
+microk8s kubectl get svc -n free5gc
+----
+
+Once this is checked we should do a forwarding of this port to able able to acces in our local browser with the command:
+
+[source, bash]
+----
+microk8s kubectl port-forward --namespace free5gc svc/webui-service 5000:5000
+----
+
+In case we are working in a remote machine we should acces through local command line with:
+[source, bash]
+----
+ssh -L localhost:5000:localhost:5000 paula@130.149.223.203
+----
+
+If it indicates that the port is already in used with another process, you can cheack and kill with
+[source, bash]
+----
+sudo lsof -i:5000
+kill -9 {PID}
+----
+
+Now we will be able to acces in local browser through http://localhost:5000. The admin credential are admin/free5gc.
+
+Now to test our network we should create a new user in the WebUI clicking in new subscriber and keep the default values that appers, submiting those.
+
+
+Check the logs in UE to check the connection to the UPF
+
+[source, bash]
+----
+
+[2023-09-19 14:05:01.620] [nas] [info] Initial Registration is successful
+[2023-09-19 14:05:01.620] [nas] [debug] Sending PDU Session Establishment Request
+[2023-09-19 14:05:01.621] [nas] [debug] UAC access attempt is allowed for identity[0], category[MO_sig]
+[2023-09-19 14:05:01.871] [nas] [debug] PDU Session Establishment Accept received
+[2023-09-19 14:05:01.872] [nas] [info] PDU Session establishment is successful PSI[1]
+[2023-09-19 14:05:01.884] [app] [info] Connection setup for PDU session[1] is successful, TUN interface[uesimtun0, 10.1.0.1] is up.
+----
+
+
+== How to install and use Kubeshark 
+
+Now we will install Kubeshark which is a tool for capturing traffic and monitoring it from Kunernetes clusters.
+
+In this case we will use helm to install it and deploy it in our mocrik8s cluster. For that first execute:
+
+[source, bash]
+----
+
+microk8s helm repo add kubeshark https://helm.kubeshark.co && \
+microk8s helm install kubeshark kubeshark/kubeshark -n kubeshark --create-namespace
+----
+It should be deployed in the clluster as:
+[source, bash]
+----
+
+$ microk8s kubectl get pods -n kubeshark
+
+kubeshark     kubeshark-front-6b77d74795-ff59h                         1/1     Running   0          2d15h
+kubeshark     kubeshark-hub-755c69ccd8-hss2r                           1/1     Running   0          2d15h
+kubeshark     kubeshark-worker-daemon-set-km6d5                        1/1     Running   0          2d15h
+
+----
+And then as we did before with the WebUI you should forward the port where Kubeshark listen in:
+[source, bash]
+----
+microk8s kubectl port-forward -n kubeshark service/kubeshark-hub 8898:80 &     microk8s kubectl port-forward -n kubeshark service/kubeshark-front 8899:80
+
+----
+
+And acces throught your local machine with:
+
+[source, bash]
+----
+ssh -L localhost:8899:localhost:8899 paula@130.149.223.203
+----
+
+And then acces the dashboard with http://localhost:8899.
+
+
+
+
+
+
+== How to solve problem with firewall VM
+:hide-uri-scheme:
+
+To solve this problem I used this documentation https://slack-archive.rancher.com/t/10289479/hi-since-a-few-hours-ago-my-dns-in-k3s-stopped-working-nobod
+
+For that I allow the IP of the pods and services that were not able to connect to the Kubernetes API
+
+To get the IP use the comands:
+
+[source, bash]
+----
+microk8s kubectl get pod -o wide -A -n kube-system
+
+microk8s kubectl get service --all-namespaces
+----
+
+For example in this case the output were:
+
+
+[source, bash]
+----
+$ microk8s kubectl get pod -o wide -A -n kube-system
+
+NAMESPACE     NAME                                         READY   STATUS    RESTARTS        AGE     IP                NODE                 NOMINATED NODE   READINESS GATES
+ingress       nginx-ingress-microk8s-controller-7vkv7      1/1     Running   5 (95s ago)     5m26s   10.1.52.4         free5gc-serverless   <none>           <none>
+kube-system   coredns-7745f9f87f-8qrz8                     1/1     Running   0               6m32s   10.1.52.2         free5gc-serverless   <none>           <none>
+kube-system   dashboard-metrics-scraper-5cb4f4bb9c-7ckxl   1/1     Running   0               5m17s   10.1.52.7         free5gc-serverless   <none>           <none>
+kube-system   hostpath-provisioner-58694c9f4b-tw65x        1/1     Running   0               5m55s   10.1.52.3         free5gc-serverless   <none>           <none>
+kube-system   kube-multus-ds-47hn9                         1/1     Running   0               5m45s   130.149.223.203   free5gc-serverless   <none>           <none>
+kube-system   kubernetes-dashboard-fc86bcc89-6rjtb         1/1     Running   4 (2m10s ago)   5m17s   10.1.52.6         free5gc-serverless   <none>           <none>
+kube-system   metrics-server-7747f8d66b-qcdpk              1/1     Running   6 (75s ago)     5m18s   10.1.52.5         free5gc-serverless   <none>           <none>
+
+
+$ microk8s kubectl get service --all-namespaces
+
+NAMESPACE     NAME                        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                  AGE
+default       kubernetes                  ClusterIP   10.152.183.1     <none>        443/TCP                  2m45s
+kube-system   dashboard-metrics-scraper   ClusterIP   10.152.183.32    <none>        8000/TCP                 72s
+kube-system   kube-dns                    ClusterIP   10.152.183.10    <none>        53/UDP,53/TCP,9153/TCP   2m28s
+kube-system   kubernetes-dashboard        ClusterIP   10.152.183.152   <none>        443/TCP                  72s
+kube-system   metrics-server              ClusterIP   10.152.183.209   <none>        443/TCP                  73s
+----
+
+
+The commands to allow traffic that were used were:
+
+[source, bash]
+----
+sudo ufw allow from 10.152.183.152 to any
+sudo ufw allow from 10.152.183.209 to any
+
+
+sudo ufw allow from 10.1.52.4 to any
+sudo ufw allow from 10.1.52.6 to any
+sudo ufw allow from 10.1.52.5 to any
+sudo ufw allow from 10.1.52.2 to any
 ----
