@@ -331,43 +331,7 @@ kube-system   kube-multus-ds-k8fh8                                     1/1     R
 kube-system   kubernetes-dashboard-fc86bcc89-9rw5z                     1/1     Running   1 (9m11s ago)   15m
 kube-system   metrics-server-7747f8d66b-xrm9k                          1/1     Running   1 (9m11s ago)   15m
 ----
-
-When the 5G core is deployed, for testing its performance we should use UERANSIM which is a 5G UE and RAN (gNodeB) simulator. For that we will use the same free5gc repo as before (towards5gs)
-
-[source, bash]
-----
-
-microk8s helm3 -n free5gc install free5gc-ueransim towards5gs/ueransim --set global.n2network.masterIf=ens18,global.n3network.masterIf=ens18,global.n2network.type=macvlan,global.n3network.type=macvlan
-
-----
-
-The pods should be in running mode as follows:
-
-[source, bash]
-----
-
-$microk8s kubectl get pods -A
-
-free5gc       free5gc-ueransim-gnb-6946c7db87-wlpct                    1/1     Running   0          2d18h
-free5gc       free5gc-ueransim-ue-c948c5b56-twbzc                      1/1     Running   0          2d18h
-----
-
-
-Make sure that this return is 1
-[source, bash]
-----
-kubectl -n free5gc exec -it free5gc-core-free5gc-upf-upf-d7c877b7-tjj47 -- cat /proc/sys/net/ipv4/ip_forward
-
-----
-
-For checking the ip of UE and any other data we can acces the pods command line:
-[source, bash]
-----
-kubectl -n free5gc exec -it free5gc-core-free5gc-upf-upf-d7c877b7-tjj47 -- cat /proc/sys/net/ipv4/ip_forward
-----
-
-
-== How to use and test its functionality
+=== Access the free5gc WebUI and add a new subscriber
 
 In first plkace we should acces the Web UI to be able to create a UE for testing:
 
@@ -403,6 +367,36 @@ Now we will be able to acces in local browser through http://localhost:5000. The
 Now to test our network we should create a new user in the WebUI clicking in new subscriber and keep the default values that appers, submiting those.
 
 
+
+Now that you have added the new subscriber, it is time to install the user plane chart.
+When the 5G core is deployed, for testing its performance we should use UERANSIM which is a 5G UE and RAN (gNodeB) simulator. For that we will use the same towards5gs repo as before (towards5gs)
+
+[source, bash]
+----
+
+microk8s helm3 -n free5gc install free5gc-ueransim towards5gs/ueransim --set global.n2network.masterIf=ens18,global.n3network.masterIf=ens18,global.n2network.type=macvlan,global.n3network.type=macvlan
+
+----
+
+The pods should be in running mode as follows:
+
+[source, bash]
+----
+
+$microk8s kubectl get pods -A
+
+free5gc       free5gc-ueransim-gnb-6946c7db87-wlpct                    1/1     Running   0          2d18h
+free5gc       free5gc-ueransim-ue-c948c5b56-twbzc                      1/1     Running   0          2d18h
+----
+
+
+Make sure that this return is 1
+[source, bash]
+----
+microk8s kubectl -n free5gc exec -it free5gc-core-free5gc-upf-upf-d7c877b7-dlhbd -- cat /proc/sys/net/ipv4/ip_forward
+
+----
+
 Check the logs in UE to check the connection to the UPF
 
 [source, bash]
@@ -415,6 +409,7 @@ Check the logs in UE to check the connection to the UPF
 [2023-09-19 14:05:01.872] [nas] [info] PDU Session establishment is successful PSI[1]
 [2023-09-19 14:05:01.884] [app] [info] Connection setup for PDU session[1] is successful, TUN interface[uesimtun0, 10.1.0.1] is up.
 ----
+
 
 
 == How to install and use Kubeshark 
@@ -518,3 +513,35 @@ sudo ufw allow from 10.1.52.6 to any
 sudo ufw allow from 10.1.52.5 to any
 sudo ufw allow from 10.1.52.2 to any
 ----
+
+
+== Useful command to interact with the cluster
+
+To check the IP of each pod use describe
+
+[source, bash]
+----
+microk8s kubectl describe pod <podID> -n <namespace>
+----
+
+To check the logs of the pod
+
+[source, bash]
+----
+microk8s kubectl logs <podID> -n <namespace>
+----
+
+To delete a namespace
+
+[source, bash]
+----
+microk8s kubectl delete namespace <namespace>
+----
+
+to delete a pod
+
+[source, bash]
+----
+microk8s kubectl delete pod <podID> -n <namespace>
+----
+
