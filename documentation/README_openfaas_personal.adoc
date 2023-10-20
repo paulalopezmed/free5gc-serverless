@@ -30,7 +30,9 @@ ifndef::env-github[]
 endif::[]
 // End: Enable admonition icons
 
-This documentation contains the information necesary to install OpenFaas and to access to the minikube cluster with kubectl throught a client Ubuntu machine 
+This documentation contains the inform
+
+ation necesary to install OpenFaas and to access to the minikube cluster with kubectl throught a client Ubuntu machine 
 
 // Create the Table of contents here
 toc::[]
@@ -70,6 +72,8 @@ kubectl get nodes
 2) Install with arkade openfaas and verify it works with: To verify that openfaas has started, run:
 [source,bash]
 ----
+
+arkade install openfaas
 kubectl -n openfaas get deployments -l "release=openfaas, app=openfaas"
 ----
 

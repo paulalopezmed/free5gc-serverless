@@ -83,7 +83,6 @@ sudo apt -y install git gcc g++ cmake autoconf libtool pkg-config libmnl-dev lib
 Install and start the cluster automatically (verified that snap is installed)
 
 [source, bash]
-
 ----
 sudo snap install microk8s --classic
 sudo usermod -a -G microk8s $USER
