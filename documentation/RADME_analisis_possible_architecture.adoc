@@ -167,7 +167,7 @@ So having in mind the process we followed to duscrad AMF as a possible candidate
 3. NASUF_UEAthentication Service. It provides UEAuthentication Service to the requester NF. The NF Service Custoer is the AMF. This service permits to authenticate the UE and to provide one or more master keys which are used by the AMF to derived subsequent keys.
 
 
-=== AUSF code struture
+=== AUSF code structure
 
 We will name and define the most important packages. Statirng first for the package PKG.
 
