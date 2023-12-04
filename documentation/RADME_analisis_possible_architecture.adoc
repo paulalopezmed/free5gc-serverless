@@ -1,4 +1,4 @@
-= Deploy free5gc with microk8s 
+= Analysis of possible architectures of serverless deployment
 Paula López Medina 
 v1.0, 2020-12
 // Metadata
