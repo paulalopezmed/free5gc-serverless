@@ -1,0 +1,210 @@
+= Deploy free5gc with microk8s 
+Paula López Medina 
+v1.0, 2020-12
+// Metadata
+:keywords: serverless, AMD, free5gc, AUSF 
+// Create TOC wherever needed
+:toc: macro
+:sectanchors:
+:sectnumlevels: 2
+:sectnums: 
+:source-highlighter: pygments
+:imagesdir: images
+// Start: Enable admonition icons
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+// Icons for GitHub
+:yes: :heavy_check_mark:
+:no: :x:
+endif::[]
+ifndef::env-github[]
+:icons: font
+// Icons not for GitHub
+:yes: icon:check[]
+:no: icon:times[]
+endif::[]
+// End: Enable admonition icons
+
+This documentation contains the information necesary to understand the current architecture analysis for deploting free5gc as serverless function.
+
+// Create the Table of contents here
+toc::[]
+
+
+
+== Introduction
+
+Int his documentation we will see how to deploy free5gc and UERANSIM using microk8s. The decition to use mircok8s is based on the ease of cluster cofiguration and the stability it provides by taking away much of the complexity of the deployment of the cluster.
+
+== Possible architectures that were considered for the proyect
+
+In first place, the architecture will be based on Openfaas with kubernetes deployment, where the platform allows the user to deploy openfaas and all the openfaas-functions containarized in kubernetes. This solution will be more simple for the previous architectures, the measurement process will be more accurate to compare to the previous deployment of free5gc as microservices and lastly, it is more suitable for more complex and large deployments. 
+
+In the second place, we will need to install Openfaas in our system. This process is facilitated from microk8s which has a previously configured addon to lift Openfaas into the local cluster. To do this run the command.
+
+[source, bash]
+----
+microk8s enable openfaas 
+----
+
+The related documentation can be found https://microk8s.io/docs/addon-openfaas[here].
+
+It must be remarkable, that the idea will be to deploy one of the NFs that work for the authentication of the users equipment in the network, separaiting the different functions and analisys it's functionality. The first step will be to study the different NF to differ which ones are the candidates for deploy them this way.
+
+In the last place, the considered possible architectures are listed below:
+
+1. Microservice: Each NF as a microservice
+2. Serverless: Each NF decompose in functions an deploy as a FaaS function
+3. Hybrid: Some NFs as a microservice and some NF decompose in functions an deploy as a FaaS function => Is this possible? => does it make sense?
+
+== Analysis of the different architecture possibilities
+
+For the porpuse of making the decision of which is the most suitable architecture for this deploment we have considered the following 5 questions for the analysis. We should have in mind the following basic definition of what a serverless function is: "OpenFaaS functions are run in containers, and every such container must conform to a simple convention - it must act as an HTTP server listening on a predefined port (8080 by default), assume ephemeral storage, and be stateless" and also "Functions are ephemeral because at any point they can be replaced by an identical copy without impacting behaviour. This property means that all functions can be managed in the 	same way - from their health-check to their lifecycle, logging and monitoring."
+
+Knowing this, we present the following analysis:
+
+
+1. May the database be always up? does it make sense to deploy it as an event-driven function?
+
+    The database is not a stateless microservice. It actually has to be always up with the information of all the store NF-related information after they register with the NRF, as well 	as UE-related information such 	as authentication keys,authentication status, policy data etc.
+
+    On the other hand NRF register all the information of the rest of the NFs. Do we need it to be always up for other NFs to check?
+
+2. How much time do each NF take to deploy? Is it short enough for cold start?
+
+	AMF: 2 min 19 sec
+	AUF: 2 min 20 sec
+	BDpython: 2 min  14 sec
+	NRF: 2 min  14 sec
+	NSSF: 2 min  19 sec
+	PCF: 2 min  20 sec
+	SMF: 2 min  20 sec
+	UDM: 2 min  18 sec
+	UDR: 2 min  20 sec
+	UPF: 0sec
+	WEBUI: 2 min  14 sec
+	mongoDB: 0sec
+
+    The timings that have resulted from the study indicate that deploying the NFs as servless functions that have to start with cold start does not make sense. could this be related to a possible dependance between NFs?
+
+3. Is there any dependencies between NFs?Is there any NF that many others depend on? May that NF be always up?
+
+    In terms of deploying the main dependance is the MongoDB deployment. We can say the rest of the NF depend on the mongodb to start their deployment. Maybe the solution can be to leave the mongodb always up.
+
+
+	Dependencies of NFs:
+	AMF: NRF
+	AUF: NRF
+	BDpython: Mongo
+	NRF: Mongo
+	NSSF: NRF
+	PCF: NRF
+	SMF: NRF
+	UDM: NRF
+	UDR: NRF
+	UPF: -
+	WEBUI: Mongo
+	mongoDB: -
+
+    Also, according to the dependancies, the deployment time results make sense, all the NFs depend on NRF to start. So would it be better if we leave NRF up deplyed as a microservice?
+
+4. Do NFs have persistance?
+
+    According to the definition found in the pod, Mongodb is the only pods that has Persistent Volume Claim. That converts it directly into a statefull which could not be deploy as a FaaS function.   
+
+	The mongodb is the only one whose volume type is pvc:
+	Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+	
+
+5. Is there possible bottlenecks in the hybrid architecture?
+
+	According to  https://dl.ifip.org/db/conf/cnsm/cnsm2021/1570730220.pdf, the bottleneck can happen in a microservices architecture in the mongodb.
+	Can this be incremented by maintaining the database out of the openfaas namespace?
+
+
+== Analysis of the NFs to be decomposed into functions
+
+The process started by chosing AMF for the module to be studied due to the fact that it is a complex module that it is more probable it will have an impact in the final performance of the network. For this the following list is the process followed for studying the hypotheis.
+
+1. I will create one function/message that is send to the AMF. This is beacuse the FaaS cuntions must be trigger for itto deplyed. This means that the trigger must be a arequest input to the network function
+
+2. I will use the go-middleware template. Use this tutorial: https://www.openfaas.com/blog/golang-deep-dive/["Adding a sub-package to your function"]
+
+3. Locate the entrypoints that correspond to the input of network messages
+
+4. The triggers ("transformed http2 calls") will be coded in the handler function 
+
+5. The Start() function of init.go from AMF might be inluded in the FaaS function code in the func init()
+
+6. Code directories that must the included in Sub-packeges of the function: "producer", probably "consumer" because it send the confirmation messages to the AUSF and process the messages that comes from UE. Would that be enough?
+
+7. Now the problem is: the messages that comes from de UE are not HTTP2 protocol, I don't know what protocol and how are they triggered. There's no entrypoint related to that I can use as the trigger of the function + the format of the trigger change so, Should we decide the https://docs.openfaas.com/reference/triggers/#community-triggers[trigger] to use?
+
+8. The format of the message from UE to AMF is NAS (explanation of the https://www.sharetechnote.com/html/5G/5G_RadioProtocolStackArchitecture.html[protocolstack] ) there is no matching trigger to NAS available to OpenFaas. 
+
+9. Is there any other way I can create a function in OpenFaas that translate NAS into HTTP? Is that even possible? Is this out of the scope? Translate from NAS to HTTP is not the way to continue. Not enought information in the NAS messages to translate them in text 
+
+10. Can this lead to understanding that maybe serverless is not an option for AMF functions? 
+
+11. Can be the solution for thisundertanding that we must foucs in any other NF, like for example AUSF: there will be two function too, but both triggered by a HTTP2 call. Also the code is more simple to abstract and understand, mostly common to AMF.
+
+
+== Understanding services and code of the AUSF
+
+So having in mind the process we followed to duscrad AMF as a possible candidate for deploying as serverless, we considered AUSF is more adjustable to the scope and requisites. We start by understanding the services that AUSF includes.
+
+
+=== AUSF services
+
+1. NAUSF_SoRProtection Service. This service allows o portect UDM with security measures called SoR-MAS-IAUSF and CounterSoR to protect a list of information use for routing calls or data. Thisprevents this information from being modified or deleted by other parts of the network (VLPLMN)
+
+2. NAUSF_UPUPretection Service. This service allows to act as a data protector of update of parameters of users (UPUProtection) from other NFs. So this keeps the data save from modifications or eliminations that are not authorize. Also, it gives aditional security (UPU-XMAC-WE)
+
+3. NASUF_UEAthentication Service. It provides UEAuthentication Service to the requester NF. The NF Service Custoer is the AMF. This service permits to authenticate the UE and to provide one or more master keys which are used by the AMF to derived subsequent keys.
+
+
+=== AUSF code structure
+
+We will name and define the most important packages. Statirng first for the package PKG.
+
+. PKG. conatins the init.go with the functions Start() and Terminate() in charge of starting and finishing the NF.
+
+. Internal.in this package is contained all the logic, entrypoints, variable management and the logs management.
+
+.. Context. Define the parameters of the NF. It contains:
+... ausf_context-init.go: initContext()
+... context.go: define parameters
+
+.. Logger. Manage the logs of the NF. It contains the go file logger.go
+
+.. SBI. It contains the rest of the logic of the services of the NF.
+... Consumer. controls the NF services consumer (e.x. AMF)
+.... nf_discovery.go: send the NRF the request and save the info of the instances found.
+.... nf_management.go: manage the registration and deregistration of the AUSF in the NRF. 
+
+... Produce. service in charge of the creation of requested content by the 3GPP defined services.
+
+.... eapAkaPrimeKeyGen_test.go: use for verification of generated keys from the EAP_AKA' protocol of authentication. Includes:
+- TestEapPrimeCase: speciify entry values spected by the authentication process. 
+- EapAkaPrimeKeyGenAll: calculated required values using the ones generated by the TestEapAka that are the ruled.
+- TestEapAkaPrimeKeyGen: verify if the calculated values in EapAkaPrimeKeyGenAll are the spected one of TestEapPrimeCase.
+
+.... ue_authentication.go: this file is in charge of the authentication of a specific user to generate a true or false authentication.
+
+.... function.go: this section is in charge of the creation of the authentication value and the commuications of it to UDM.
+
+... SoRProtection. SupiUeSorPost (/:supi/ue-sor) POST
+
+... UPUProtection. SupiUeUpuPost (/:supi/ue-upu) POST
+
+... ueauthentication. 
+.... HTTPEapAuthMethod (/ue-authentications/:authCtxId/eap-session) POST
+
+.... HTTPUeAuthneticationsAuthCtxID5gAkaConfirmationPut (/ue-authentications/:authCtxId/5g-AKA-confirmation) PUT
+
+.... HTTPEapAuthenticationPost (/ue-authentications) POST
+

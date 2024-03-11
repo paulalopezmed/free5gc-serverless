@@ -1,0 +1,5 @@
+template
+build
+.secrets
+ingress-operator
+k8s-init.yml

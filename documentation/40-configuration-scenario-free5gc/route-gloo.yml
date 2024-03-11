@@ -1,0 +1,20 @@
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: openfaas-route
+  namespace: gloo-system
+spec:
+  virtualHost:
+    domains:
+      - '*'
+    routes:
+      - matchers:
+          - prefix: "/nausf-auth/v1/ue-authentications"
+        routeAction:
+          single:
+            upstream:
+              name: openfaas-gateway-8080
+              namespace: gloo-system             
+        options:
+          prefixRewrite: "/function/ue-authentications"
+          timeout: '1m'

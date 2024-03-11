@@ -1,0 +1,175 @@
+Defaulted container "nrf" out of: nrf, wait-mongo (init)
+2024-01-08T16:22:11.360431007Z [INFO][NRF][Main] NRF version:
+        free5GC version: v3.3.0
+        build time:      2023-06-20T08:00:13Z
+        commit hash:     db4c0f90
+        commit time:     2023-05-11T08:14:48Z
+        go version:      go1.17.8 linux/amd64
+2024-01-08T16:22:11.360527750Z [INFO][NRF][CFG] Read config from [../config/nrfcfg.yaml]
+2024-01-08T16:22:11.360993797Z [INFO][NRF][Main] Log enable is set to [true]
+2024-01-08T16:22:11.361017510Z [INFO][NRF][Main] Log level is set to [info]
+2024-01-08T16:22:11.361025611Z [INFO][NRF][Main] Report Caller is set to [false]
+2024-01-08T16:22:11.361047635Z [INFO][NRF][Init] nrfconfig Info: Version[1.0.2] Description[NRF initial local configuration]
+2024-01-08T16:22:11.361323923Z [INFO][NRF][Init] Server starting
+2024-01-08T16:22:11.361749000Z [INFO][NRF][Init] Binding addr: [0.0.0.0:8000]
+2024-01-08T16:22:11.373780127Z [INFO][NRF][GIN] | 200 |       10.1.19.1 | GET     | / |
+2024-01-08T16:22:11.537154284Z [INFO][NRF][GIN] | 200 |      10.1.19.39 | GET     | / |
+2024-01-08T16:22:11.846132305Z [INFO][NRF][GIN] | 200 |      10.1.19.37 | GET     | / |
+2024-01-08T16:22:11.976810577Z [INFO][NRF][GIN] | 200 |      10.1.19.38 | GET     | / |
+2024-01-08T16:22:11.977555467Z [INFO][NRF][GIN] | 200 |      10.1.19.22 | GET     | / |
+2024-01-08T16:22:11.982364716Z [INFO][NRF][GIN] | 200 |      10.1.19.23 | GET     | / |
+2024-01-08T16:22:11.987570855Z [INFO][NRF][GIN] | 200 |      10.1.19.20 | GET     | / |
+2024-01-08T16:22:12.371278963Z [INFO][NRF][GIN] | 200 |       10.1.19.1 | GET     | / |
+2024-01-08T16:22:12.572301379Z [INFO][NRF][GIN] | 200 |      10.1.19.17 | GET     | / |
+2024-01-08T16:22:13.368588247Z [INFO][NRF][GIN] | 200 |       10.1.19.1 | GET     | / |
+2024-01-08T16:22:14.368622850Z [INFO][NRF][GIN] | 200 |       10.1.19.1 | GET     | / |
+2024-01-08T16:22:15.368677423Z [INFO][NRF][GIN] | 200 |       10.1.19.1 | GET     | / |
+2024-01-08T16:22:16.080783583Z [INFO][NRF][NFM] Handle NFRegisterRequest
+2024-01-08T16:22:16.091687175Z [INFO][NRF][NFM] urilist create
+2024-01-08T16:22:16.099678844Z [INFO][NRF][NFM] Create NF Profile
+2024-01-08T16:22:16.101118808Z [INFO][NRF][NFM] Location header:  http://nrf-nnrf:8000/nnrf-nfm/v1/nf-instances/1a303cb0-0a05-4009-a9a8-13d295450e14
+2024-01-08T16:22:16.101272353Z [INFO][NRF][GIN] | 201 |      10.1.19.20 | PUT     | /nnrf-nfm/v1/nf-instances/1a303cb0-0a05-4009-a9a8-13d295450e14 |
+2024-01-08T16:22:16.223382731Z [INFO][NRF][NFM] Handle NFRegisterRequest
+2024-01-08T16:22:16.229714362Z [INFO][NRF][NFM] urilist create
+2024-01-08T16:22:16.232525335Z [INFO][NRF][NFM] Create NF Profile
+2024-01-08T16:22:16.234000249Z [INFO][NRF][NFM] Location header:  http://nrf-nnrf:8000/nnrf-nfm/v1/nf-instances/e44f4777-59b1-471d-b3fe-ba17784f2353
+2024-01-08T16:22:16.234157763Z [INFO][NRF][GIN] | 201 |      10.1.19.37 | PUT     | /nnrf-nfm/v1/nf-instances/e44f4777-59b1-471d-b3fe-ba17784f2353 |
+2024-01-08T16:22:16.368126168Z [INFO][NRF][GIN] | 200 |       10.1.19.1 | GET     | / |
+2024-01-08T16:22:16.555309806Z [INFO][NRF][NFM] Handle NFRegisterRequest
+2024-01-08T16:22:16.557789867Z [INFO][NRF][NFM] urilist create
+2024-01-08T16:22:16.559280984Z [INFO][NRF][NFM] Create NF Profile
+2024-01-08T16:22:16.562025105Z [INFO][NRF][NFM] Location header:  http://nrf-nnrf:8000/nnrf-nfm/v1/nf-instances/765b06f9-e87f-4433-ae3a-6f0e90918b7d
+2024-01-08T16:22:16.562157128Z [INFO][NRF][GIN] | 201 |      10.1.19.39 | PUT     | /nnrf-nfm/v1/nf-instances/765b06f9-e87f-4433-ae3a-6f0e90918b7d |
+2024-01-08T16:22:17.166948056Z [INFO][NRF][NFM] Handle NFRegisterRequest
+2024-01-08T16:22:17.174886810Z [INFO][NRF][NFM] urilist create
+2024-01-08T16:22:17.175915593Z [INFO][NRF][NFM] Create NF Profile
+2024-01-08T16:22:17.177049115Z [INFO][NRF][NFM] Location header:  http://nrf-nnrf:8000/nnrf-nfm/v1/nf-instances/aaee103b-193c-4754-ab1c-49b38a3030af
+2024-01-08T16:22:17.177214814Z [INFO][NRF][GIN] | 201 |      10.1.19.38 | PUT     | /nnrf-nfm/v1/nf-instances/aaee103b-193c-4754-ab1c-49b38a3030af |
+2024-01-08T16:22:17.243062766Z [INFO][NRF][NFM] Handle NFRegisterRequest
+2024-01-08T16:22:17.244879201Z [INFO][NRF][NFM] urilist create
+2024-01-08T16:22:17.246045508Z [INFO][NRF][NFM] Create NF Profile
+2024-01-08T16:22:17.248187828Z [INFO][NRF][NFM] Location header:  http://nrf-nnrf:8000/nnrf-nfm/v1/nf-instances/16d0b457-c2a1-4aa3-985f-6d5cae2b80c6
+2024-01-08T16:22:17.248370671Z [INFO][NRF][GIN] | 201 |      10.1.19.17 | PUT     | /nnrf-nfm/v1/nf-instances/16d0b457-c2a1-4aa3-985f-6d5cae2b80c6 |
+2024-01-08T16:22:17.368543658Z [INFO][NRF][GIN] | 200 |       10.1.19.1 | GET     | / |
+2024-01-08T16:22:17.675734442Z [INFO][NRF][NFM] Handle NFRegisterRequest
+2024-01-08T16:22:17.687795768Z [INFO][NRF][NFM] urilist create
+2024-01-08T16:22:17.689335378Z [INFO][NRF][NFM] Create NF Profile
+2024-01-08T16:22:17.694049272Z [INFO][NRF][NFM] Handle NFRegisterRequest
+2024-01-08T16:22:17.695317828Z [INFO][NRF][NFM] Location header:  http://nrf-nnrf:8000/nnrf-nfm/v1/nf-instances/8aa4627a-e927-4c05-b3a7-791e48278bc5
+2024-01-08T16:22:17.695392958Z [INFO][NRF][GIN] | 201 |      10.1.19.22 | PUT     | /nnrf-nfm/v1/nf-instances/8aa4627a-e927-4c05-b3a7-791e48278bc5 |
+2024-01-08T16:22:17.696324275Z [INFO][NRF][NFM] urilist create
+2024-01-08T16:22:17.697481304Z [INFO][NRF][NFM] Create NF Profile
+2024-01-08T16:22:17.698443422Z [INFO][NRF][NFM] Location header:  http://nrf-nnrf:8000/nnrf-nfm/v1/nf-instances/1b563489-9029-48c4-8684-907710488735
+2024-01-08T16:22:17.698675027Z [INFO][NRF][GIN] | 201 |      10.1.19.23 | PUT     | /nnrf-nfm/v1/nf-instances/1b563489-9029-48c4-8684-907710488735 |
+2024-01-08T16:22:17.699384139Z [INFO][NRF][DISC] Handle NFDiscoveryRequest
+2024-01-08T16:22:17.700209759Z [INFO][NRF][GIN] | 200 |      10.1.19.23 | GET     | /nnrf-disc/v1/nf-instances?requester-nf-type=PCF&service-names=nudr-dr&target-nf-type=UDR |
+
+
+ microk8s kubectl describe pods free5gc-core-free5gc-ausf-ausf-5b977d46bc-klx6q -n free5gc
+Name:             free5gc-core-free5gc-ausf-ausf-5b977d46bc-klx6q
+Namespace:        free5gc
+Priority:         0
+Service Account:  default
+Node:             free5gc-serverless/130.149.223.203
+Start Time:       Mon, 08 Jan 2024 16:19:51 +0000
+Labels:           app.kubernetes.io/instance=free5gc-core
+                  app.kubernetes.io/name=free5gc-ausf
+                  nf=ausf
+                  pod-template-hash=5b977d46bc
+                  project=free5gc
+Annotations:      checksum/config: 521d22c7a870259bfbfef4d586f9026733fa2947e3898d6e2d4993ecd51ce071
+                  k8s.v1.cni.cncf.io/network-status:
+                    [{
+                        "name": "microk8s-flannel-network",
+                        "interface": "eth0",
+                        "ips": [
+                            "10.1.19.20"
+                        ],
+                        "mac": "52:06:7e:0a:1b:93",
+                        "default": true,
+                        "dns": {}
+                    }]
+                  k8s.v1.cni.cncf.io/networks-status:
+                    [{
+                        "name": "microk8s-flannel-network",
+                        "interface": "eth0",
+                        "ips": [
+                            "10.1.19.20"
+                        ],
+                        "mac": "52:06:7e:0a:1b:93",
+                        "default": true,
+                        "dns": {}
+                    }]
+Status:           Running
+IP:               10.1.19.20
+IPs:
+  IP:           10.1.19.20
+Controlled By:  ReplicaSet/free5gc-core-free5gc-ausf-ausf-5b977d46bc
+Init Containers:
+  wait-nrf:
+    Container ID:  containerd://c462763746336f9843d7d0d5281d08d3e23307e74c49ca4b49df5f793f1886fa
+    Image:         towards5gs/initcurl:1.0.0
+    Image ID:      docker.io/towards5gs/initcurl@sha256:e23221cf71f98e8a46a324a3325650a5f675d9ab198eab079109872c670b6e90
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      set -x; for dependency in $DEPENDENCIES; do while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" $dependency) -ne 200 ]; do echo waiting for dependencies; sleep 1; done; done;
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Mon, 08 Jan 2024 16:19:55 +0000
+      Finished:     Mon, 08 Jan 2024 16:22:11 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      DEPENDENCIES:  http://nrf-nnrf:8000
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-6jcb8 (ro)
+Containers:
+  ausf:
+    Container ID:  containerd://1ef19a2b1efe6711bdda0dfaa46572346e928a665e627f54e4a31cad66de377c
+    Image:         towards5gs/free5gc-ausf:latest
+    Image ID:      docker.io/towards5gs/free5gc-ausf@sha256:26db76afb550541a62bcd78bd9456e8a680301ab8a9bb97a0a22d6d1cf0303e8
+    Port:          80/TCP
+    Host Port:     0/TCP
+    Command:
+      ./ausf
+    Args:
+      -c
+      ../config/ausfcfg.yaml
+    State:          Running
+      Started:      Mon, 08 Jan 2024 16:22:16 +0000
+    Ready:          True
+    Restart Count:  0
+    Requests:
+      cpu:     100m
+      memory:  128Mi
+    Environment:
+      GIN_MODE:  release
+    Mounts:
+      /free5gc/config/ from free5gc-core-free5gc-ausf-volume (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-6jcb8 (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  free5gc-core-free5gc-ausf-volume:
+    Type:               Projected (a volume that contains injected data from multiple sources)
+    ConfigMapName:      free5gc-core-free5gc-ausf-configmap
+    ConfigMapOptional:  <nil>
+  kube-api-access-6jcb8:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:                      <none>

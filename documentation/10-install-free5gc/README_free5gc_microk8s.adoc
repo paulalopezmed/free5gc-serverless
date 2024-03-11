@@ -1,0 +1,559 @@
+= Deploy free5gc with microk8s 
+
+:toc: macro
+:sectanchors:
+:sectnumlevels: 2
+:sectnums: 
+:source-highlighter: pygments
+:imagesdir: images
+// Start: Enable admonition icons
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+// Icons for GitHub
+:yes: :heavy_check_mark:
+:no: :x:
+endif::[]
+ifndef::env-github[]
+:icons: font
+// Icons not for GitHub
+:yes: icon:check[]
+:no: icon:times[]
+endif::[]
+// End: Enable admonition icons
+
+This documentation contains the information necesary to deploy free5gc and UERANSIM using microk8s 
+
+// Create the Table of contents here
+toc::[]
+
+
+
+== Introduction
+
+Int his documentation we will see how to deploy free5gc and UERANSIM using microk8s. The decition to use mircok8s is based on the ease of cluster cofiguration and the stability it provides by taking away much of the complexity of the deployment of the cluster.
+
+== Prerequisites and instalation proceses
+
+Preparethe packeages needed in the system
+
+[source, bash]
+----
+sudo apt update
+sudo apt upgrade
+----
+
+Check the kernel of your machine
+
+[source, bash]
+----
+$ uname -a
+Linux free5gc-serverless 5.15.0-83-generic #92-Ubuntu SMP Mon Aug 14 09:30:42 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+
+----
+
+=== Install prerequisites
+
+Install helm
+
+[source, bash]
+----
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+rm get_helm.sh
+----
+
+Install the neccesary packeges for gpt5g
+
+[source, bash]
+----
+sudo apt -y install git gcc g++ cmake autoconf libtool pkg-config libmnl-dev libyaml-dev
+----
+
+=== Install microk8s and configuration of the cluster
+
+Install and start the cluster automatically, verified that snap is installed if not:
+
+[source, bash]
+----
+sudo apt install snapd
+----
+
+Install the cluster
+
+[source, bash]
+----
+sudo snap install microk8s --classic
+sudo usermod -a -G microk8s $USER
+
+sudo chown -f -R $USER ~/.kube
+newgrp microk8s
+----
+
+For cheacking the state of the cluster
+[source, bash]
+----
+microk8s status --wait-ready
+----
+
+If you are automating the configuration run:
+[source, bash]
+----
+cd documentation/00-microk8s-configure/
+./microk8s-configure-addons.sh
+----
+
+In case you prefer to do it manually:
+Configure the cluster with the disable/enable of the adons needed
+
+[source, bash]
+----
+microk8s disable ha-cluster --force
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable dns
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable community
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable hostpath-storage
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable multus
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable ingress
+microk8s status
+microk8s kubectl get pods -A
+
+microk8s enable dashboard
+microk8s status
+microk8s kubectl get pods -A
+
+----
+
+Check that the cluster is correctly configured with this output:
+
+[source, bash]
+----
+
+$ microk8s status
+
+microk8s is running
+high-availability: no
+  datastore endpoints:
+    127.0.0.1:12379
+addons:
+  enabled:
+    multus               # (community) Multus CNI enables attaching multiple network interfaces to pods
+    community            # (core) The community addons repository
+    dashboard            # (core) The Kubernetes dashboard
+    dns                  # (core) CoreDNS
+    helm                 # (core) Helm - the package manager for Kubernetes
+    helm3                # (core) Helm 3 - the package manager for Kubernetes
+    hostpath-storage     # (core) Storage class; allocates storage from host directory
+    ingress              # (core) Ingress controller for external access
+    metrics-server       # (core) K8s Metrics Server for API access to service metrics
+    storage              # (core) Alias to hostpath-storage add-on, deprecated
+  disabled:
+    argocd               # (community) Argo CD is a declarative continuous deployment for Kubernetes.
+    cilium               # (community) SDN, fast with full network policy
+    dashboard-ingress    # (community) Ingress definition for Kubernetes dashboard
+    easyhaproxy          # (community) EasyHAProxy can configure HAProxy automatically based on ingress labels
+    fluentd              # (community) Elasticsearch-Fluentd-Kibana logging and monitoring
+    gopaddle-lite        # (community) Cheapest, fastest and simplest way to modernize your applications
+    inaccel              # (community) Simplifying FPGA management in Kubernetes
+    istio                # (community) Core Istio service mesh services
+    jaeger               # (community) Kubernetes Jaeger operator with its simple config
+    kata                 # (community) Kata Containers is a secure runtime with lightweight VMS
+    keda                 # (community) Kubernetes-based Event Driven Autoscaling
+    knative              # (community) Knative Serverless and Event Driven Applications
+    kwasm                # (community) WebAssembly support for WasmEdge (Docker Wasm) and Spin (Azure AKS WASI)
+    linkerd              # (community) Linkerd is a service mesh for Kubernetes and other frameworks
+    nfs                  # (community) NFS Server Provisioner
+    ondat                # (community) Ondat is a software-defined, cloud native storage platform for Kubernetes.
+    openebs              # (community) OpenEBS is the open-source storage solution for Kubernetes
+    openfaas             # (community) OpenFaaS serverless framework
+    osm-edge             # (community) osm-edge is a lightweight SMI compatible service mesh for the edge-computing.
+    parking              # (community) Static webserver to park a domain. Works with EasyHAProxy.
+    portainer            # (community) Portainer UI for your Kubernetes cluster
+    shifu                # (community) Kubernetes native IoT software development framework.
+    sosivio              # (community) Kubernetes Predictive Troubleshooting, Observability, and Resource Optimization
+    traefik              # (community) traefik Ingress controller
+    trivy                # (community) Kubernetes-native security scanner
+    cert-manager         # (core) Cloud native certificate management
+    gpu                  # (core) Automatic enablement of Nvidia CUDA
+    ha-cluster           # (core) Configure high availability on the current node
+    host-access          # (core) Allow Pods connecting to Host services smoothly
+    kube-ovn             # (core) An advanced network fabric for Kubernetes
+    mayastor             # (core) OpenEBS MayaStor
+    metallb              # (core) Loadbalancer for your Kubernetes cluster
+    minio                # (core) MinIO object storage
+    observability        # (core) A lightweight observability stack for logs, traces and metrics
+    prometheus           # (core) Prometheus operator for monitoring and logging
+    rbac                 # (core) Role-Based Access Control for authorisation
+    registry             # (core) Private image registry exposed on localhost:32000
+----
+
+[source, bash]
+----
+$ microk8s kubectl get pods -A
+
+NAMESPACE     NAME                                         READY   STATUS    RESTARTS       AGE
+ingress       nginx-ingress-microk8s-controller-srsr2      1/1     Running   0              29m
+kube-system   coredns-7745f9f87f-s8j77                     1/1     Running   2 (10m ago)    46m
+kube-system   dashboard-metrics-scraper-5cb4f4bb9c-rggmq   1/1     Running   0              38s
+kube-system   hostpath-provisioner-58694c9f4b-7shl7        1/1     Running   2 (111s ago)   31m
+kube-system   kube-multus-ds-k8fh8                         1/1     Running   1 (10m ago)    30m
+kube-system   kubernetes-dashboard-fc86bcc89-9rw5z         1/1     Running   0              38s
+kube-system   metrics-server-7747f8d66b-xrm9k              1/1     Running   0              38s
+
+----
+
+Lastly active the promisc mode in the corresponding network. For that first check the network interface on the kubernetes nodes corresponding to your system that might be similar to the form eth0. For that, use the command to cheack the name of the inetrface:
+
+[source, bash]
+----
+ip a
+----
+
+Then run the command:
+[source, bash]
+----
+sudo ip link set ens18 promisc on
+----
+
+=== Install gtp5g and libgtp5gnl
+
+First install gtp5g:
+
+[source, bash]
+----
+
+git clone https://github.com/free5gc/gtp5g.git
+cd gtp5g
+make clean && make
+sudo make install
+
+----
+
+For this error when making make comand:
+[source, bash]
+----
+Skipping BTF generation for /home/paula/gtp5g/gtp5g.ko due to unavailability of vmlinux
+----
+Solved with:
+
+[source, bash]
+----
+sudo apt install dwarves
+sudo cp /sys/kernel/btf/vmlinux /usr/lib/modules/`uname -r`/build/
+
+----
+
+
+Secondly install libgtp5gnl
+[source, bash]
+----
+git clone https://github.com/free5gc/libgtp5gnl.git
+cd libgtp5gnl
+autoreconf -iv
+./configure --prefix=`pwd`
+make
+sudo ./tools/gtp5g-tunnel list pdr
+sudo ./tools/gtp5g-tunnel list far
+sudo ./run.sh UPF_PDR_FAR_QER
+./run.sh ULCLTest1
+----
+
+
+
+== Deploy free5gc and UERANSIM
+
+First create a namespace for the deployment named free5gc
+
+[source, bash]
+----
+microk8s kubectl create namespace free5gc
+----
+
+Add the https://raw.githubusercontent.com/Orange-OpenSource/towards5gs-helm/main/repo/"[towards5gs] repo with:
+
+[source, bash]
+----
+helm repo add towards5gs 'https://raw.githubusercontent.com/Orange-OpenSource/towards5gs-helm/main/repo/'
+helm repo update
+----
+
+For the install command we have to check one again the network interface, as an example in this case the command ip a give this output for the enp0s3 network interface:
+
+
+[source, bash]
+----
+$ ip a
+
+2: ens18: <BROADCAST,MULTICAST,PROMISC,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 76:9a:58:76:d9:d0 brd ff:ff:ff:ff:ff:ff
+    altname enp0s18
+    inet 130.149.223.203/26 brd 130.149.223.255 scope global ens18
+       valid_lft forever preferred_lft forever
+    inet6 fe80::749a:58ff:fe76:d9d0/64 scope link
+       valid_lft forever preferred_lft forever
+
+----
+
+So the command needing for installing free5gc helm chart:
+[source, bash]
+----
+microk8s helm -n free5gc install free5gc-core towards5gs/free5gc     --set global.n2network.masterIf=ens18     --set global.n3network.masterIf=ens18     --set global.n4network.masterIf=ens18     --set global.n6network.masterIf=ens18     --set global.n9network.masterIf=ens18     --set global.n6network.subnetIP=130.149.223.192     --set global.n6network.cidr=26     --set global.n6network.gatewayIP=130.149.223.194     --set free5gc-upf.upf.n6if.ipAddress=130.149.223.198    --set global.n2network.type=macvlan     --set global.n3network.type=macvlan     --set global.n4network.type=macvlan     --set global.n6network.type=macvlan     --set global.n9network.type=macvlan
+----
+
+To check everything is working correctly the ouput of this command should be of this type:
+
+[source, bash]
+----
+$ microk8s kubectl get pods -A
+NAMESPACE     NAME                                                     READY   STATUS    RESTARTS        AGE
+free5gc       free5gc-core-free5gc-amf-amf-7b856846c9-h6dfg            1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-ausf-ausf-7dd46c9fb7-ktz5q          1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-dbpython-dbpython-b6b587768-4vdjc   1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-nrf-nrf-94c56fb79-bbgmb             1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-nssf-nssf-545f9dc99c-wzmrh          1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-pcf-pcf-57589b5c66-rjpsr            1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-smf-smf-7cc7bd6b54-94r2v            1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-udm-udm-5d5497c6f4-2vns6            1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-udr-udr-ffb6dc48f-hcz29             1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-upf-upf-56469b9fd9-dfw5s            1/1     Running   0               5m5s
+free5gc       free5gc-core-free5gc-webui-webui-5fbb96469-xs6zb         1/1     Running   0               5m5s
+free5gc       mongodb-0                                                1/1     Running   0               5m5s
+ingress       nginx-ingress-microk8s-controller-srsr2                  1/1     Running   1 (9m11s ago)   44m
+kube-system   coredns-7745f9f87f-s8j77                                 1/1     Running   3 (9m11s ago)   61m
+kube-system   dashboard-metrics-scraper-5cb4f4bb9c-rggmq               1/1     Running   1 (9m11s ago)   15m
+kube-system   hostpath-provisioner-58694c9f4b-7shl7                    1/1     Running   3 (9m11s ago)   46m
+kube-system   kube-multus-ds-k8fh8                                     1/1     Running   2 (9m11s ago)   46m
+kube-system   kubernetes-dashboard-fc86bcc89-9rw5z                     1/1     Running   1 (9m11s ago)   15m
+kube-system   metrics-server-7747f8d66b-xrm9k                          1/1     Running   1 (9m11s ago)   15m
+----
+=== Access the free5gc WebUI and add a new subscriber
+
+In first plkace we should acces the Web UI to be able to create a UE for testing:
+
+For this the first step is to check that the pod called webui-service, the one that will give us access to the portal is lisneting in the port 5000 with the comand:
+
+[source, bash]
+----
+microk8s kubectl get svc -n free5gc
+----
+
+Once this is checked we should do a forwarding of this port to able able to acces in our local browser with the command:
+
+[source, bash]
+----
+microk8s kubectl port-forward --namespace free5gc svc/webui-service 5000:5000
+----
+
+In case we are working in a remote machine we should acces through local command line with:
+[source, bash]
+----
+ssh -L localhost:5000:localhost:5000 paula@130.149.223.203
+----
+
+If it indicates that the port is already in used with another process, you can cheack and kill with
+[source, bash]
+----
+sudo lsof -i:5000
+kill -9 {PID}
+----
+
+Now we will be able to acces in local browser through http://localhost:5000. The admin credential are admin/free5gc.
+
+Now to test our network we should create a new user in the WebUI clicking in new subscriber and keep the default values that appers, submiting those.
+
+
+
+Now that you have added the new subscriber, it is time to install the user plane chart.
+When the 5G core is deployed, for testing its performance we should use UERANSIM which is a 5G UE and RAN (gNodeB) simulator. For that we will use the same towards5gs repo as before (towards5gs)
+
+[source, bash]
+----
+
+microk8s helm3 -n free5gc install free5gc-ueransim towards5gs/ueransim --set global.n2network.masterIf=ens18,global.n3network.masterIf=ens18,global.n2network.type=macvlan,global.n3network.type=macvlan
+
+----
+
+The pods should be in running mode as follows:
+
+[source, bash]
+----
+
+$microk8s kubectl get pods -A
+
+free5gc       free5gc-ueransim-gnb-6946c7db87-wlpct                    1/1     Running   0          2d18h
+free5gc       free5gc-ueransim-ue-c948c5b56-twbzc                      1/1     Running   0          2d18h
+----
+
+
+Make sure that this return is 1
+[source, bash]
+----
+microk8s kubectl -n free5gc exec -it free5gc-core-free5gc-upf-upf-d7c877b7-dlhbd -- cat /proc/sys/net/ipv4/ip_forward
+
+----
+
+Check the logs in UE to check the connection to the UPF
+
+[source, bash]
+----
+
+[2023-09-19 14:05:01.620] [nas] [info] Initial Registration is successful
+[2023-09-19 14:05:01.620] [nas] [debug] Sending PDU Session Establishment Request
+[2023-09-19 14:05:01.621] [nas] [debug] UAC access attempt is allowed for identity[0], category[MO_sig]
+[2023-09-19 14:05:01.871] [nas] [debug] PDU Session Establishment Accept received
+[2023-09-19 14:05:01.872] [nas] [info] PDU Session establishment is successful PSI[1]
+[2023-09-19 14:05:01.884] [app] [info] Connection setup for PDU session[1] is successful, TUN interface[uesimtun0, 10.1.0.1] is up.
+----
+
+
+
+== How to install and use Kubeshark 
+
+Now we will install Kubeshark which is a tool for capturing traffic and monitoring it from Kunernetes clusters.
+
+In this case we will use helm to install it and deploy it in our mocrik8s cluster. For that first execute:
+
+[source, bash]
+----
+
+microk8s helm repo add kubeshark https://helm.kubeshark.co && \
+microk8s helm install kubeshark kubeshark/kubeshark -n kubeshark --create-namespace
+----
+It should be deployed in the clluster as:
+[source, bash]
+----
+
+$ microk8s kubectl get pods -n kubeshark
+
+kubeshark     kubeshark-front-6b77d74795-ff59h                         1/1     Running   0          2d15h
+kubeshark     kubeshark-hub-755c69ccd8-hss2r                           1/1     Running   0          2d15h
+kubeshark     kubeshark-worker-daemon-set-km6d5                        1/1     Running   0          2d15h
+
+----
+And then as we did before with the WebUI you should forward the port where Kubeshark listen in:
+[source, bash]
+----
+microk8s kubectl port-forward -n kubeshark service/kubeshark-hub 8898:80 &     microk8s kubectl port-forward -n kubeshark service/kubeshark-front 8899:80
+
+----
+
+And acces throught your local machine with:
+
+[source, bash]
+----
+ssh -L localhost:8899:localhost:8899 paula@130.149.223.203
+----
+
+And then acces the dashboard with http://localhost:8899.
+
+
+
+
+
+
+== How to solve problem with firewall VM
+:hide-uri-scheme:
+
+To solve this problem I used this documentation https://slack-archive.rancher.com/t/10289479/hi-since-a-few-hours-ago-my-dns-in-k3s-stopped-working-nobod
+
+For that I allow the IP of the pods and services that were not able to connect to the Kubernetes API
+
+To get the IP use the comands:
+
+[source, bash]
+----
+microk8s kubectl get pod -o wide -A -n kube-system
+
+microk8s kubectl get service --all-namespaces
+----
+
+For example in this case the output were:
+
+
+[source, bash]
+----
+$ microk8s kubectl get pod -o wide -A -n kube-system
+
+NAMESPACE     NAME                                         READY   STATUS    RESTARTS        AGE     IP                NODE                 NOMINATED NODE   READINESS GATES
+ingress       nginx-ingress-microk8s-controller-7vkv7      1/1     Running   5 (95s ago)     5m26s   10.1.52.4         free5gc-serverless   <none>           <none>
+kube-system   coredns-7745f9f87f-8qrz8                     1/1     Running   0               6m32s   10.1.52.2         free5gc-serverless   <none>           <none>
+kube-system   dashboard-metrics-scraper-5cb4f4bb9c-7ckxl   1/1     Running   0               5m17s   10.1.52.7         free5gc-serverless   <none>           <none>
+kube-system   hostpath-provisioner-58694c9f4b-tw65x        1/1     Running   0               5m55s   10.1.52.3         free5gc-serverless   <none>           <none>
+kube-system   kube-multus-ds-47hn9                         1/1     Running   0               5m45s   130.149.223.203   free5gc-serverless   <none>           <none>
+kube-system   kubernetes-dashboard-fc86bcc89-6rjtb         1/1     Running   4 (2m10s ago)   5m17s   10.1.52.6         free5gc-serverless   <none>           <none>
+kube-system   metrics-server-7747f8d66b-qcdpk              1/1     Running   6 (75s ago)     5m18s   10.1.52.5         free5gc-serverless   <none>           <none>
+
+
+$ microk8s kubectl get service --all-namespaces
+
+NAMESPACE     NAME                        TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                  AGE
+default       kubernetes                  ClusterIP   10.152.183.1     <none>        443/TCP                  2m45s
+kube-system   dashboard-metrics-scraper   ClusterIP   10.152.183.32    <none>        8000/TCP                 72s
+kube-system   kube-dns                    ClusterIP   10.152.183.10    <none>        53/UDP,53/TCP,9153/TCP   2m28s
+kube-system   kubernetes-dashboard        ClusterIP   10.152.183.152   <none>        443/TCP                  72s
+kube-system   metrics-server              ClusterIP   10.152.183.209   <none>        443/TCP                  73s
+----
+
+The commands to allow traffic that were used were:
+
+[source, bash]
+----
+sudo ufw allow from 10.152.183.152 to any
+sudo ufw allow from 10.152.183.209 to any
+
+
+sudo ufw allow from 10.1.52.4 to any
+sudo ufw allow from 10.1.52.6 to any
+sudo ufw allow from 10.1.52.5 to any
+sudo ufw allow from 10.1.52.2 to any
+----
+
+
+== Useful command to interact with the cluster
+
+To check the IP of each pod use describe
+
+[source, bash]
+----
+microk8s kubectl describe pod <podID> -n <namespace>
+----
+
+To check the logs of the pod
+
+[source, bash]
+----
+microk8s kubectl logs <podID> -n <namespace>
+----
+
+To delete a namespace
+
+[source, bash]
+----
+microk8s kubectl delete namespace <namespace>
+----
+
+to delete a pod
+
+[source, bash]
+----
+microk8s kubectl delete pod <podID> -n <namespace>
+----
+

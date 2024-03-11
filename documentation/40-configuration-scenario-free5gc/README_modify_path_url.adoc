@@ -1,0 +1,143 @@
+= Modification of the path with Gloo API
+Paula López Medina 
+v1.0, 2020-12
+// Metadata
+:keywords: serverless, AMD, free5gc, AUSF 
+// Create TOC wherever needed
+:toc: macro
+:sectanchors:
+:sectnumlevels: 2
+:sectnums: 
+:source-highlighter: pygments
+:imagesdir: images
+// Start: Enable admonition icons
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+// Icons for GitHub
+:yes: :heavy_check_mark:
+:no: :x:
+endif::[]
+ifndef::env-github[]
+:icons: font
+// Icons not for GitHub
+:yes: icon:check[]
+:no: icon:times[]
+endif::[]
+// End: Enable admonition icons
+
+This documentation contains the information necessary to understand how to configure the path of the URL and redirect to the OpenFaaS function
+
+// Create the Table of contents here
+toc::[]
+
+
+
+== Introduction
+
+In this file, we will explain how to redirect the message path structure to the FaaS function so we can trigger the function with the free5gc standard path of the URL: /nausf-auth/v1/ue-authentications.
+
+For this, we will use Gloo Api Gateway https://www.solo.io/products/gloo-gateway/.
+
+We will start by deploying the function and free5gc with no trigger of the function. 
+
+== Installing Gloo Api Gateway:
+
+First, to fix the error that can appear when installing Gloo API  in the microk8s cluster we should install MetalLB Loadbalancer which will let us have a Load balance implementation of the cluster network. Then give reading permission to the cluster certificates and configure "kubectl" for pointing to the microk8s cluster.
+
+
+[source, bash]
+----
+microk8s enable dns rbac storage metallb:192.168.64.50-192.168.64.100
+sudo chmod +r /var/snap/microk8s/6089/certs/ca.crt
+sudo cp /var/snap/microk8s/6089/certs/ca.crt /home/paula
+microk8s kubectl config set-cluster microk8s --server=https://127.0.0.1:16443 --certificate-authority=/home/paula/ca.crt --embed-certs=true
+microk8s kubectl config view --raw > ~/.kube/config
+----
+
+Now we can install Gloo API Gateway:
+
+[source, bash]
+----
+curl -sL https://run.solo.io/gloo/install | sh
+export PATH=$HOME/.gloo/bin:$PATH
+glooctl version
+glooctl install gateway -i
+
+microk8s kubectl get svc -n gloo-system
+----
+
+== Create a route
+
+To create the new route, first, we have to check what Gloo automatically discovers with the following command:
+
+[source, bash]
+----
+glooctl get upstreams
+----
+
+Then, look for the upstream that corresponds to the openfaas function which will be similar to "openfaas-fn-ue-authentications-8080".
+Check the details of the upstream:
+[source, bash]
+----
+glooctl get upstream openfaas-fn-ue-authentications-8080
+----
+
+or 
+
+[source, bash]
+----
+glooctl get upstream openfaas-fn-ue-authentications-8080 -o kube-yaml
+----
+
+Now it is time to create the route which will take the path --path-exact of the form "/nausf-auth/v1/ue-authentications" for this example and send it to the upstream of name dest-name and take whatever matches the prefix fixed in --prefix-rewrite:
+
+[source, bash]
+----
+glooctl add route --path-exact /nausf-auth/v1/ue-authentications  --dest-name openfaas-fn-ue-authentications-8080  --prefix-rewrite /
+----
+
+For testing the functionality run:
+[source, bash]
+----
+curl -l http://10.0.0.100:80/nausf-auth/v1/ue-authentications
+----
+
+Check in the AUSF functions logs if the function was triggered:
+[source, bash]
+----
+microk8s kubectl logs <ue-authentications-pod-name> -n openfaas-fn
+----
+
+Now for changing the configuration of the gloo gateway for changing the port to another one that is not 80:
+[source, bash]
+----
+microk8s kubectl edit service -n gloo-system gateway-proxy
+
+----
+
+And change the port to fit this:
+[source, bash]
+----
+ports:
+  - name: http
+    nodePort: 31720
+    port: 9090
+    protocol: TCP
+    targetPort: 8080
+  - name: https
+    nodePort: 30913
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+----
+
+Documentation used:
+For in microk8s deployment:
+ https://www.solo.io/blog/a-local-development-kubernetes-environment-for-gloo-edge/
+ https://microk8s.io/docs/addon-metallb
+For the gloo api installation and configuration:
+ https://medium.com/alterway/call-openfaas-serverless-functions-with-gloo-api-gateway-678a00710481

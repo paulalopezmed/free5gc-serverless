@@ -1,0 +1,248 @@
+= Install OpenFaas
+Paula López Medina 
+v1.0, 2020-12
+// Metadata
+:keywords: kubeshark 
+// Create TOC wherever needed
+:toc: macro
+:sectanchors:
+:sectnumlevels: 2
+:sectnums: 
+:source-highlighter: pygments
+:imagesdir: images
+// Start: Enable admonition icons
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+// Icons for GitHub
+:yes: :heavy_check_mark:
+:no: :x:
+endif::[]
+ifndef::env-github[]
+:icons: font
+// Icons not for GitHub
+:yes: icon:check[]
+:no: icon:times[]
+endif::[]
+// End: Enable admonition icons
+
+This documentation contains the information necesary to install OpenFaas and to access to the minikube cluster with kubectl throught a client Ubuntu machine 
+
+// Create the Table of contents here
+toc::[]
+
+== For installing and connect to openfaas dashboard
+
+1) Install minikube and kubectl and start it
+For installing minikube and start it:
+
+[source,bash]
+----
+wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+sudo cp minikube-linux-amd64 /usr/local/bin/minikube
+sudo chmod +x /usr/local/bin/minikube
+
+minikube start
+----
+
+For installing kubectl for interacting with the minikube cluster:
+
+[source,bash]
+----
+curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+chmod +x kubectl
+sudo mv kubectl /usr/local/bin/
+----
+
+To check about the information of the cluster:
+
+[source,bash]
+----
+kubectl cluster-info
+kubectl get nodes
+----
+
+
+2) Install with arkade openfaas and verify it works with:
+
+To install arkade run
+[source,bash]
+----
+curl -sLS https://get.arkade.dev | sudo sh
+----
+To install openfaas with arkade run 
+[source,bash]
+----
+
+arkade install openfaas
+----
+ To verify that openfaas has started, run:
+[source,bash]
+----
+kubectl -n openfaas get deployments -l "release=openfaas, app=openfaas"
+----
+
+3) To know the admin password decoded run:
+[source,bash]
+----
+echo $(kubectl -n openfaas get secret basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode)
+----
+
+4) Forward the gateway to your machine
+[source,bash]
+----
+kubectl rollout status -n openfaas deploy/gateway
+kubectl port-forward -n openfaas svc/gateway 8080:8080 &
+----
+
+In case it gives an error because it is already in use, try killing the process by getting its ID with:
+
+[source,bash]
+----
+ps aux | grep kubectl
+----
+And then kill the process with:
+[source,bash]
+----
+kill ID
+----
+
+5) For getting into the openfaas dashboard
+
+    5.1) Lynx:
+    [source,bash]
+    ----
+    lynx http://127.0.0.1:8080/ui/
+    ----
+
+    5.2) Curl:
+    [source,bash]
+    ----
+    curl -u admin:<password> http://127.0.0.1:8080/ui/
+    ----
+
+6) You don't need the web dashboard to use OpenFaaS, you can get the CLI with this command: `curl -sL cli.openfaas.com | sh`
+
+7) For making alias `k=kubectl` in `~./bashrc`
+
+== Access to the openfaas cluster through an Ubuntu 20.04.6 WSL
+
+Following this  https://www.zepworks.com/posts/access-minikube-remotely-kvm/#3c-open-the-port-[tutorial]
+
+1) Copy the private key of the server machine to the WSL in `~/.ssh/id_rsa`
+
+2) Copy all the certificates from minikube in WSL
+[source,bash]
+----
+scp user@IP:ca.crt .
+scp user@IP:client.crt .
+scp user@IP:client.key .
+----
+
+3) Install nginx on the server machine
+[source,bash]
+----
+sudo apt update
+sudo apt install nginx
+----
+
+4) In `/etc/nginx/nginx.conf`, add this piece of configuration. This line "listen <IP>:8080;" refers to the IP of the server machine
+[source,bash]
+----
+stream {
+  server {
+      # This is the Public IP and Port
+      listen <IP>:8080;
+      # TCP traffic will be forwarded to the specified server
+      # This is the Minikube IP and Port
+      proxy_pass 192.168.49.2:8443;
+  }
+}
+----
+
+5) And restart nginx:
+[source,bash]
+----
+sudo systemctl restart nginx
+----
+
+6) In `~/.kube/`, create a file called `config` with this text. In the line `server: https://<IP>:8080`, we are referring to the previous config we created on the server machine in the nginx configuration.
+[source]
+----
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: ca.ctr
+    # server: https://192.168.39.131:8443  <-- this was the previous value there
+    server: https://<IP>:8080"
+  name: minikube
+contexts:
+- context:
+    cluster: minikube
+    user: <username>
+  name: minikube
+current-context: minikube
+kind: Config
+preferences: {}
+users:
+- name: <username>
+  user:
+    client-certificate: client.ctr
+    client-key: client.key
+----
+
+For checking the connection with the cluster:
+[source,bash]
+----
+kubectl get pods
+----
+
+7) Continue with the previous set:
+
+    7.1) First get the admin password:
+    [source,bash]
+    ----
+    echo $(microk8s kubectl -n openfaas get secret basic-auth -o jsonpath="{.data.basic-auth-password}" | base64 --decode)
+    ----
+
+    7.2) Forward the 8080 port:
+    [source,bash]
+    ----
+    kubectl port-forward -n openfaas svc/gateway 8080:8080 &
+    ----
+
+    7.3) Check the openfaas cluster:
+    [source,bash]
+    ----
+    kubectl -n openfaas get deployments -l "release=openfaas, app=openfaas"
+    ----
+
+    7.4) Access the openfaas dashboard:
+    [source,bash]
+    ----
+    curl -u admin:<password> http://127.0.0.1:8080/ui/
+    ----
+
+== Install OpenFaaS in microk8s and how to access the UI
+
+
+  [source,bash]
+  ----
+  microk8s enable openfaas
+  ----
+
+  Include this variable in ~/.bashrc:
+  [source,bash]
+  ----
+  export OPENFAAS_URL=http://127.0.0.1:31112
+  ----
+  To acces the UI:
+
+  [source,bash]
+  ----
+  ssh -L localhost:8080:localhost:31112 paula@130.149.223.203
+  curl http://127.0.0.1:31112
+  ----

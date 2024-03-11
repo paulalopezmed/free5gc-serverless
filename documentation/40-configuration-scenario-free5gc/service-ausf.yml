@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-proxy-ausf
+  namespace: gloo-system
+spec:
+  selector:
+    gloo: gateway-proxy
+  ports:
+    - protocol: TCP
+      port: 8083
+      targetPort: 8083
+  type: LoadBalancer
+
+

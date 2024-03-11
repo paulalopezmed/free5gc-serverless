@@ -1,0 +1,81 @@
+k logs free5gc-core-free5gc-ausf-ausf-5b977d46bc-mqglv -n free5gc
+Defaulted container "ausf" out of: ausf, wait-nrf (init)
+2023-12-11T09:26:53.721932774Z [INFO][AUSF][Main] AUSF version:  
+        free5GC version: v3.3.0
+        build time:      2023-06-20T08:00:10Z
+        commit hash:     64f47ebe
+        commit time:     2023-05-11T08:11:05Z
+        go version:      go1.17.8 linux/amd64
+2023-12-11T09:26:53.722091490Z [INFO][AUSF][CFG] Read config from [../config/ausfcfg.yaml]
+2023-12-11T09:26:53.722825221Z [INFO][AUSF][Main] Log enable is set to [true]
+2023-12-11T09:26:53.722844832Z [INFO][AUSF][Main] Log level is set to [info]
+2023-12-11T09:26:53.722851131Z [INFO][AUSF][Main] Report Caller is set to [false]
+2023-12-11T09:26:53.722870582Z [INFO][AUSF][Init] ausfconfig Info: Version[1.0.3] Description[AUSF initial local configuration]
+ausf context =  &{{{0 0} {<nil>} map[] 0} {{0 0} {<nil>} map[] 0} 1b028aeb-ac93-4f72-891c-726c51de29bb ausfGroup001 80 free5gc-core-free5gc-ausf-service 0.0.0.0 http://free5gc-core-free5gc-ausf-service:80 http http://nrf-nnrf:8000 map[nausf-auth:{1b028aeb-ac93-4f72-891c-726c51de29bb nausf-auth 0xc00000cdb0 http REGISTERED   0xc00000cd98  [] <nil> [] [] <nil> 0 0 0 <nil> <nil>  }] [{208 93} {123 45}]  0xc000262460 false}
+2023-12-11T09:26:53.723000800Z [INFO][AUSF][Init] Server started
+
+-----------------------------------------------------------------------------------------------------------------------
+Whenever the UE cannot be REGISTERED:
+
+k logs free5gc-core-free5gc-ausf-ausf-5b977d46bc-mqglv -n free5gc 
+Defaulted container "ausf" out of: ausf, wait-nrf (init)
+2023-12-11T09:26:53.721932774Z [INFO][AUSF][Main] AUSF version:  
+        free5GC version: v3.3.0
+        build time:      2023-06-20T08:00:10Z
+        commit hash:     64f47ebe
+        commit time:     2023-05-11T08:11:05Z
+        go version:      go1.17.8 linux/amd64
+2023-12-11T09:26:53.722091490Z [INFO][AUSF][CFG] Read config from [../config/ausfcfg.yaml]
+2023-12-11T09:26:53.722825221Z [INFO][AUSF][Main] Log enable is set to [true]
+2023-12-11T09:26:53.722844832Z [INFO][AUSF][Main] Log level is set to [info]
+2023-12-11T09:26:53.722851131Z [INFO][AUSF][Main] Report Caller is set to [false]
+2023-12-11T09:26:53.722870582Z [INFO][AUSF][Init] ausfconfig Info: Version[1.0.3] Description[AUSF initial local configuration]
+ausf context =  &{{{0 0} {<nil>} map[] 0} {{0 0} {<nil>} map[] 0} 1b028aeb-ac93-4f72-891c-726c51de29bb ausfGroup001 80 free5gc-core-free5gc-ausf-service 0.0.0.0 http://free5gc-core-free5gc-ausf-service:80 http http://nrf-nnrf:8000 map[nausf-auth:{1b028aeb-ac93-4f72-891c-726c51de29bb nausf-auth 0xc00000cdb0 http REGISTERED   0xc00000cd98  [] <nil> [] [] <nil> 0 0 0 <nil> <nil>  }] [{208 93} {123 45}]  0xc000262460 false}
+2023-12-11T09:26:53.723000800Z [INFO][AUSF][Init] Server started
+2023-12-11T09:31:48.653948720Z [INFO][AUSF][UeAuth] HandleUeAuthPostRequest
+2023-12-11T09:31:48.653988026Z [INFO][AUSF][UeAuth] Serving network authorized
+2023-12-11T09:31:48.669202984Z [INFO][AUSF][UeAuth] 403 Forbidden
+2023-12-11T09:31:48.669331816Z [INFO][AUSF][GIN] | 403 |      10.1.41.70 | POST    | /nausf-auth/v1/ue-authentications |
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Whenever the user is succefully REGISTERED:
+
+Defaulted container "ausf" out of: ausf, wait-nrf (init)
+2023-12-11T09:26:53.721932774Z [INFO][AUSF][Main] AUSF version:  
+        free5GC version: v3.3.0
+        build time:      2023-06-20T08:00:10Z
+        commit hash:     64f47ebe
+        commit time:     2023-05-11T08:11:05Z
+        go version:      go1.17.8 linux/amd64
+2023-12-11T09:26:53.722091490Z [INFO][AUSF][CFG] Read config from [../config/ausfcfg.yaml]
+2023-12-11T09:26:53.722825221Z [INFO][AUSF][Main] Log enable is set to [true]
+2023-12-11T09:26:53.722844832Z [INFO][AUSF][Main] Log level is set to [info]
+2023-12-11T09:26:53.722851131Z [INFO][AUSF][Main] Report Caller is set to [false]
+2023-12-11T09:26:53.722870582Z [INFO][AUSF][Init] ausfconfig Info: Version[1.0.3] Description[AUSF initial local configuration]
+ausf context =  &{{{0 0} {<nil>} map[] 0} {{0 0} {<nil>} map[] 0} 1b028aeb-ac93-4f72-891c-726c51de29bb ausfGroup001 80 free5gc-core-free5gc-ausf-service 0.0.0.0 http://free5gc-core-free5gc-ausf-service:80 http http://nrf-nnrf:8000 map[nausf-auth:{1b028aeb-ac93-4f72-891c-726c51de29bb nausf-auth 0xc00000cdb0 http REGISTERED   0xc00000cd98  [] <nil> [] [] <nil> 0 0 0 <nil> <nil>  }] [{208 93} {123 45}]  0xc000262460 false}
+2023-12-11T09:26:53.723000800Z [INFO][AUSF][Init] Server started
+2023-12-11T09:31:48.653948720Z [INFO][AUSF][UeAuth] HandleUeAuthPostRequest
+2023-12-11T09:31:48.653988026Z [INFO][AUSF][UeAuth] Serving network authorized
+2023-12-11T09:31:48.669202984Z [INFO][AUSF][UeAuth] 403 Forbidden
+2023-12-11T09:31:48.669331816Z [INFO][AUSF][GIN] | 403 |      10.1.41.70 | POST    | /nausf-auth/v1/ue-authentications |
+2023-12-11T09:37:33.764688232Z [INFO][AUSF][UeAuth] HandleUeAuthPostRequest
+2023-12-11T09:37:33.764728194Z [INFO][AUSF][UeAuth] Serving network authorized
+2023-12-11T09:37:33.775355816Z [INFO][AUSF][UeAuth] Add SuciSupiPair (suci-0-208-93-0000-0-0-0000000003, imsi-208930000000003) to map.
+2023-12-11T09:37:33.775381319Z [INFO][AUSF][UeAuth] Use 5G AKA auth method
+2023-12-11T09:37:33.775406407Z [INFO][AUSF][5gAka] XresStar = 6539653164636536343835336535333366653865393263613039303763663334
+2023-12-11T09:37:33.775512834Z [INFO][AUSF][GIN] | 201 |      10.1.41.70 | POST    | /nausf-auth/v1/ue-authentications |
+2023-12-11T09:37:33.780155857Z [INFO][AUSF][UeAuth] HandleUeAuthPostRequest
+2023-12-11T09:37:33.780193474Z [INFO][AUSF][UeAuth] Serving network authorized
+2023-12-11T09:37:33.780200426Z [WARN][AUSF][UeAuth] Auts:  ecdad821825342a42ca24f23ae03
+2023-12-11T09:37:33.780210556Z [WARN][AUSF][UeAuth] imsi-208930000000003
+2023-12-11T09:37:33.780217494Z [WARN][AUSF][UeAuth] 4248091ffaa635310532457e64e8afe0
+2023-12-11T09:37:33.780222988Z [WARN][AUSF][UeAuth] Rand:  4248091ffaa635310532457e64e8afe0
+2023-12-11T09:37:33.788540752Z [INFO][AUSF][UeAuth] Add SuciSupiPair (suci-0-208-93-0000-0-0-0000000003, imsi-208930000000003) to map.
+2023-12-11T09:37:33.788568598Z [INFO][AUSF][UeAuth] Use 5G AKA auth method
+2023-12-11T09:37:33.788581938Z [INFO][AUSF][5gAka] XresStar = 3135386166396561383265313634326561373538323063616230346366623165
+2023-12-11T09:37:33.788657285Z [INFO][AUSF][GIN] | 201 |      10.1.41.70 | POST    | /nausf-auth/v1/ue-authentications |
+2023-12-11T09:37:33.791864956Z [INFO][AUSF][5gAka] Auth5gAkaComfirmRequest
+2023-12-11T09:37:33.791920718Z [INFO][AUSF][5gAka] res*: 3135386166396561383265313634326561373538323063616230346366623165
+Xres*: 3135386166396561383265313634326561373538323063616230346366623165
+2023-12-11T09:37:33.791930179Z [INFO][AUSF][5gAka] 5G AKA confirmation succeeded
+2023-12-11T09:37:33.801632403Z [INFO][AUSF][GIN] | 200 |      10.1.41.70 | PUT     | /nausf-auth/v1/ue-authentications/suci-0-208-93-0000-0-0-0000000003/5g-aka-confirmation |
